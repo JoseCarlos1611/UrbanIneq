@@ -441,7 +441,7 @@ def get_job_files(job_id: str) -> List[Path]:
 # -------------------------------------------------------------------
 
 async def plumber_get(path: str) -> Dict[str, Any]:
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=600.0) as client:
         response = await client.get(f"{PLUMBER_URL}{path}")
 
     if response.status_code >= 400:
