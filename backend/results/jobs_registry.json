@@ -1,0 +1,425 @@
+[
+  {
+    "job_id": "41016-clinics_public-20260403171114",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T17:11:16.135807+00:00",
+    "config": {
+      "city_code": "41016",
+      "city_name": "Bollullos de la Mitación",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 2
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T17:11:16.135834+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41016-hcf_public.rds",
+      "41016-hcf_public_y.png",
+      "41016_clinics_any.png",
+      "41016_clinics_public.png",
+      "41016_greenzones.png",
+      "41016_x2.png"
+    ]
+  },
+  {
+    "job_id": "04013-parks-20260403170144",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T17:01:46.498597+00:00",
+    "config": {
+      "city_code": "04013",
+      "city_name": "Almería",
+      "locations": "parks",
+      "dist_type": "min",
+      "bias_var": 4
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T17:01:46.498631+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "04013-ugs.rds",
+      "04013-ugs_y.png",
+      "04013_clinics_any.png",
+      "04013_clinics_public.png",
+      "04013_greenzones.png",
+      "04013_x4.png"
+    ]
+  },
+  {
+    "job_id": "41091-clinics_public-20260403165900",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T16:59:04.192148+00:00",
+    "config": {
+      "city_code": "41091",
+      "city_name": "Sevilla",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 3
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T16:59:04.192166+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41091-hcf_public.rds",
+      "41091-hcf_public_y.png",
+      "41091-ugs.rds",
+      "41091-ugs_y.png",
+      "41091_clinics_any.png",
+      "41091_clinics_public.png",
+      "41091_greenzones.png",
+      "41091_x1.png",
+      "41091_x2.png",
+      "41091_x3.png"
+    ]
+  },
+  {
+    "job_id": "14021-clinics_public-20260403161902",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T16:19:05.099133+00:00",
+    "config": {
+      "city_code": "14021",
+      "city_name": "Córdoba",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 4
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T16:19:05.099149+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "14021-hcf_public.rds",
+      "14021-hcf_public_y.png",
+      "14021_clinics_any.png",
+      "14021_clinics_public.png",
+      "14021_greenzones.png",
+      "14021_x4.png"
+    ]
+  },
+  {
+    "job_id": "29067-clinics_public-20260403160134",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T16:01:37.286692+00:00",
+    "config": {
+      "city_code": "29067",
+      "city_name": "Málaga",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 7
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T16:01:37.286714+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "29067-hcf_public.rds",
+      "29067-hcf_public_y.png",
+      "29067_clinics_any.png",
+      "29067_clinics_public.png",
+      "29067_greenzones.png",
+      "29067_x7.png"
+    ]
+  },
+  {
+    "job_id": "21041-clinics_any-20260403155217",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T15:52:19.549983+00:00",
+    "config": {
+      "city_code": "21041",
+      "city_name": "Huelva",
+      "locations": "clinics_any",
+      "dist_type": "min",
+      "bias_var": 6
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T15:52:19.550005+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "21041-hcf.rds",
+      "21041-hcf_y.png",
+      "21041_clinics_any.png",
+      "21041_clinics_public.png",
+      "21041_greenzones.png",
+      "21041_x6.png"
+    ]
+  },
+  {
+    "job_id": "41010-clinics_public-20260403153747",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T15:37:49.578013+00:00",
+    "config": {
+      "city_code": "41010",
+      "city_name": "Almensilla",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 5
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T15:37:49.578030+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41010-hcf_public.rds",
+      "41010-hcf_public_y.png",
+      "41010_clinics_any.png",
+      "41010_clinics_public.png",
+      "41010_greenzones.png",
+      "41010_x5.png"
+    ]
+  },
+  {
+    "job_id": "41091-parks-20260403152456",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T15:24:58.728431+00:00",
+    "config": {
+      "city_code": "41091",
+      "city_name": "Sevilla",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 3
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T15:24:58.728448+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41091-ugs.rds",
+      "41091-ugs_y.png",
+      "41091_x3.png"
+    ]
+  },
+  {
+    "job_id": "41059-clinics_public-20260403152244",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T15:22:46.418047+00:00",
+    "config": {
+      "city_code": "41059",
+      "city_name": "Mairena del Aljarafe",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 7
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T15:22:46.418065+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41059-hcf_public.rds",
+      "41059-hcf_public_y.png",
+      "41059_clinics_any.png",
+      "41059_clinics_public.png",
+      "41059_greenzones.png",
+      "41059_x7.png"
+    ]
+  },
+  {
+    "job_id": "41059-clinics_public-20260403145138",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T14:51:40.679454+00:00",
+    "config": {
+      "city_code": "41059",
+      "city_name": "Mairena del Aljarafe",
+      "locations": "clinics_public",
+      "dist_type": "mean",
+      "bias_var": 7
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T14:51:40.679503+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41059-hcf_public.rds",
+      "41059-hcf_public_y.png",
+      "41059_clinics_any.png",
+      "41059_clinics_public.png",
+      "41059_greenzones.png",
+      "41059_x7.png"
+    ]
+  },
+  {
+    "job_id": "41070-parks-20260403143552",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T14:35:54.433419+00:00",
+    "config": {
+      "city_code": "41070",
+      "city_name": "Palomares del RÃ­o",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 4
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T14:35:54.433537+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41070-ugs.rds",
+      "41070-ugs_y.png",
+      "41070_clinics_any.png",
+      "41070_clinics_public.png",
+      "41070_greenzones.png",
+      "41070_x4.png"
+    ]
+  },
+  {
+    "job_id": "04013-parks-20260403121158",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T12:11:59.867997+00:00",
+    "config": {
+      "city_code": "04013",
+      "city_name": "AlmerÃ­a",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 4
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T12:11:59.868020+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": []
+  },
+  {
+    "job_id": "11020-parks-20260403121048",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T12:10:50.568278+00:00",
+    "config": {
+      "city_code": "11020",
+      "city_name": "Jerez de la Frontera",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 2
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T12:10:50.568307+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "11020-hcf.rds",
+      "11020-hcf_y.png",
+      "11020_clinics_any.png",
+      "11020_clinics_public.png",
+      "11020_greenzones.png",
+      "11020_x2.png"
+    ]
+  },
+  {
+    "job_id": "41003-parks-20260403120942",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T12:09:44.269289+00:00",
+    "config": {
+      "city_code": "41003",
+      "city_name": "Albaida del Aljarafe",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 1
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T12:09:44.269313+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": []
+  },
+  {
+    "job_id": "41091-parks-20260403120832",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-04-03T12:08:35.427274+00:00",
+    "config": {
+      "city_code": "41091",
+      "city_name": "Sevilla",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 3
+    },
+    "logs": [
+      {
+        "ts": "2026-04-03T12:08:35.427336+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41091-hcf_public.rds",
+      "41091-hcf_public_y.png",
+      "41091_clinics_any.png",
+      "41091_clinics_public.png",
+      "41091_greenzones.png",
+      "41091_x1.png",
+      "41091_x2.png"
+    ]
+  }
+]

@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api
+    container_name: unfair-urban-fastapi
+    depends_on:
+      - r-plumber
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/results:/app/results
+      - ./backend/IECA:/app/IECA
+      - ./backend/INE:/app/INE
+    restart: unless-stopped
+
+  r-plumber:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.r
+    container_name: unfair-urban-r
+    depends_on:
+      - andalucia-osrm
+    environment:
+      OSRM_URL: http://andalucia-osrm:5001/
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/results:/app/results
+      - ./backend/IECA:/app/IECA
+      - ./backend/INE:/app/INE
+    restart: unless-stopped
+
+  andalucia-osrm:
+    build:
+      context: ./backend/andalucia-osrm
+    container_name: andalucia-osrm
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    container_name: unfair-urban-frontend
+    depends_on:
+      - api
+    ports:
+      - "8081:80"
+    restart: unless-stopped
