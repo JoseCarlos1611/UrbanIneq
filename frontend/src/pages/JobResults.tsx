@@ -51,19 +51,19 @@ const JobResultsPage = () => {
   }, [jobId]);
 
   if (loading) {
-    return <div className="text-center py-20">Cargando...</div>;
+    return <div className="text-center py-20">Loading...</div>;
   }
 
   if (!job) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-xl font-semibold mb-2">Job no encontrado</h2>
+        <h2 className="text-xl font-semibold mb-2">Job not found</h2>
         <p className="text-muted-foreground mb-4">
-          El job "{jobId}" no existe o ha expirado.
+          The job "{jobId}" does not exist or has expired.
         </p>
         <Button variant="outline" asChild>
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Volver
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Link>
         </Button>
       </div>
@@ -92,27 +92,27 @@ const JobResultsPage = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
               <div>
-                <div className="text-muted-foreground text-xs mb-1">Localizaciones</div>
+                <div className="text-muted-foreground text-xs mb-1">Locations</div>
                 <div>{LOCATIONS_LABELS[job.config.locations]}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs mb-1">Distancia</div>
+                <div className="text-muted-foreground text-xs mb-1">Distance</div>
                 <div>{DIST_TYPE_LABELS[job.config.dist_type]}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs mb-1">Variable sensible</div>
+                <div className="text-muted-foreground text-xs mb-1">Sensitive attribute</div>
                 <div>{BIAS_VAR_LABELS[job.config.bias_var]}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs mb-1">Fecha</div>
-                <div>{new Date(job.created_at).toLocaleString("es-ES")}</div>
+                <div className="text-muted-foreground text-xs mb-1">Date</div>
+                <div>{new Date(job.created_at).toLocaleString("en-GB")}</div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs mb-1">Job ID</div>
                 <div className="font-mono text-xs">{job.job_id}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs mb-1">Estado</div>
+                <div className="text-muted-foreground text-xs mb-1">Status</div>
                 <div className="capitalize">{job.status}</div>
               </div>
             </div>
@@ -126,7 +126,7 @@ const JobResultsPage = () => {
             {job.result.rds_url && (
               <Button variant="outline" asChild>
                 <a href={job.result.rds_url} download>
-                  <Download className="w-4 h-4 mr-2" /> Descargar .rds
+                  <Download className="w-4 h-4 mr-2" /> Download .rds
                 </a>
               </Button>
             )}
@@ -134,7 +134,7 @@ const JobResultsPage = () => {
             {job.result.zip_url && (
               <Button asChild>
                 <a href={job.result.zip_url} download>
-                  <FileArchive className="w-4 h-4 mr-2" /> Descargar .zip completo
+                  <FileArchive className="w-4 h-4 mr-2" /> Download full .zip
                 </a>
               </Button>
             )}
@@ -142,7 +142,7 @@ const JobResultsPage = () => {
 
           {job.result.images && (
             <div className="bg-card border rounded-xl p-6 shadow-sm">
-              <h2 className="font-semibold mb-4">Mapas generados</h2>
+              <h2 className="font-semibold mb-4">Generated maps</h2>
               <ResultsGallery images={job.result.images} />
             </div>
           )}

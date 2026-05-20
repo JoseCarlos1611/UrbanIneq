@@ -1,4 +1,4 @@
-import type { Municipality, BiasTableResponse, Job, JobStage, LogEntry } from "@/types/api";
+import type { Municipality, BiasTableResponse, Job, JobStage, JobLog } from "@/types/api";
 
 export const MOCK_MUNICIPALITIES: Municipality[] = [
   { city_code: "41091", name: "Sevilla" },
@@ -18,13 +18,13 @@ export const MOCK_MUNICIPALITIES: Municipality[] = [
 export const MOCK_BIAS_TABLE: BiasTableResponse = {
   suggested: 2,
   rows: [
-    { key: "x1", label: "Población total", lower: 312, greater: 1504, u: 0.42, variation: 18.3, median: 856 },
-    { key: "x2", label: "Renta media", lower: 8200, greater: 24500, u: 0.67, variation: 45.2, median: 14300 },
-    { key: "x3", label: "% Menores", lower: 8.1, greater: 22.4, u: 0.31, variation: 28.7, median: 15.2 },
-    { key: "x4", label: "% Mayores", lower: 12.3, greater: 31.8, u: 0.38, variation: 22.1, median: 20.4 },
-    { key: "x5", label: "% Desempleo", lower: 5.2, greater: 28.9, u: 0.55, variation: 38.4, median: 14.7 },
-    { key: "x6", label: "% Extranjera", lower: 1.1, greater: 18.7, u: 0.29, variation: 32.6, median: 7.3 },
-    { key: "x7", label: "Índice de soledad", lower: 0.12, greater: 0.67, u: 0.44, variation: 25.8, median: 0.38 },
+    { key: "x1", label: "X_1 (Population)", lower: 312, greater: 1504, u: 0.42, variation: 18.3, median: 856 },
+    { key: "x2", label: "X_2 (Income)", lower: 8200, greater: 24500, u: 0.67, variation: 45.2, median: 14300 },
+    { key: "x3", label: "X_3 (Prop. of children)", lower: 8.1, greater: 22.4, u: 0.31, variation: 28.7, median: 15.2 },
+    { key: "x4", label: "X_4 (Prop. of elderly population)", lower: 12.3, greater: 31.8, u: 0.38, variation: 22.1, median: 20.4 },
+    { key: "x5", label: "X_5 (Unemployment rate)", lower: 5.2, greater: 28.9, u: 0.55, variation: 38.4, median: 14.7 },
+    { key: "x6", label: "X_6 (Prop. of foreign population)", lower: 1.1, greater: 18.7, u: 0.29, variation: 32.6, median: 7.3 },
+    { key: "x7", label: "X_7 (Loneliness index)", lower: 0.12, greater: 0.67, u: 0.44, variation: 25.8, median: 0.38 },
   ],
 };
 
@@ -46,18 +46,18 @@ export function simulateJobProgress(
   onComplete: () => void
 ) {
   let stageIndex = 0;
-  const logs: LogEntry[] = [];
+  const logs: JobLog[] = [];
 
   const msgs: Record<JobStage, string[]> = {
-    queued: ["Job encolado, esperando recursos..."],
-    downloading_ieca: ["Conectando con IECA...", "Descargando límites administrativos...", "Descargando secciones censales...", "Descargando zonas verdes..."],
-    downloading_ine: ["Conectando con INE...", "Descargando renta 2021 por sección censal..."],
-    reading_shapefiles: ["Leyendo shapefiles DERA...", "Procesando geometrías...", "Uniendo datos espaciales..."],
-    routing: ["Conectando con OSRM...", "Calculando rutas a pie desde centroides...", "Procesando matriz de distancias...", "Agregando resultados por sección censal..."],
-    building_dataset: ["Construyendo variables x1-x7...", "Calculando variable y (distancias)...", "Unificando citydata..."],
-    plotting: ["Generando mapa de zonas verdes...", "Generando mapa de distancias (y)...", "Generando mapa de variable sensible..."],
-    exporting: ["Exportando .rds...", "Empaquetando archivos en .zip..."],
-    done: ["¡Proceso completado!"],
+    queued: ["Job queued, waiting for resources..."],
+    downloading_ieca: ["Connecting to IECA...", "Downloading administrative boundaries...", "Downloading census sections...", "Downloading green areas..."],
+    downloading_ine: ["Connecting to INE...", "Downloading 2021 income by census section..."],
+    reading_shapefiles: ["Reading DERA shapefiles...", "Processing geometries...", "Joining spatial data..."],
+    routing: ["Connecting to OSRM...", "Calculating walking routes from centroids...", "Processing distance matrix...", "Aggregating results by census section..."],
+    building_dataset: ["Building x1-x7 attributes...", "Calculating y attribute (distances)...", "Merging city data..."],
+    plotting: ["Generating green areas map...", "Generating distances map (y)...", "Generating sensitive attribute map..."],
+    exporting: ["Exporting .rds...", "Packaging files into .zip..."],
+    done: ["Process completed!"],
   };
 
   const interval = setInterval(() => {
@@ -89,7 +89,7 @@ export function simulateJobProgress(
 }
 
 // Stored jobs for history
-const STORAGE_KEY = "unfair_urban_jobs";
+const STORAGE_KEY = "urbanineq_jobs";
 
 export function getStoredJobs(): Job[] {
   try {

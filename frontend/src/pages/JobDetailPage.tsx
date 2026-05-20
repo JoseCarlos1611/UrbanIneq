@@ -28,7 +28,7 @@ export default function JobDetailPage() {
     };
   }, [jobId]);
 
-  if (!job) return <div>Cargando...</div>;
+  if (!job) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">

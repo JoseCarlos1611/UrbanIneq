@@ -14,12 +14,12 @@ export default function HistoryPage() {
   }, []);
 
   if (loading) {
-    return <div>Cargando historial...</div>;
+    return <div>Loading history...</div>;
   }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6">Historial de Jobs</h1>
+      <h1 className="text-2xl font-bold mb-6">Job history</h1>
       <JobHistoryTable jobs={jobs} />
     </div>
   );

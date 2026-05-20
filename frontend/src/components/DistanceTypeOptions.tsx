@@ -7,15 +7,15 @@ interface Props {
 }
 
 const descriptions: Record<DistType, string> = {
-  mean: "Promedio de distancias a todas las localizaciones",
-  min: "Distancia al punto más cercano",
-  max: "Distancia al punto más lejano",
+  mean: "Average distance to all selected locations",
+  min: "Distance to the nearest location",
+  max: "Distance to the farthest location",
 };
 
 export function DistanceTypeOptions({ value, onChange }: Props) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-3">Tipo de distancia</label>
+      <label className="block text-sm font-medium mb-3">Distance type</label>
       <div className="grid grid-cols-3 gap-3">
         {(Object.keys(DIST_TYPE_LABELS) as DistType[]).map((key) => (
           <button

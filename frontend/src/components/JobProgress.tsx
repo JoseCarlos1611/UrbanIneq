@@ -15,7 +15,7 @@ export function JobProgress({ job }: JobProgressProps) {
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-2 text-sm">
-          <span className="font-medium">Estado: {status}</span>
+          <span className="font-medium">Status: {status}</span>
           <span>{progress}%</span>
         </div>
 
@@ -28,7 +28,7 @@ export function JobProgress({ job }: JobProgressProps) {
       </div>
 
       <div className="text-sm">
-        <span className="text-muted-foreground">Etapa actual: </span>
+        <span className="text-muted-foreground">Current stage: </span>
         <span className="font-medium">
           {stage ? STAGE_LABELS[stage] ?? stage : "-"}
         </span>

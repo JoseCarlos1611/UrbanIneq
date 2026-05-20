@@ -74,21 +74,21 @@ const Index = () => {
   }, [jobId, jobState.status]);
 
   const steps = [
-    { title: "Municipio", desc: "Selecciona el municipio de Andalucía" },
-    { title: "Accesibilidad", desc: "Elige el tipo de localización" },
-    { title: "Distancia", desc: "Selecciona cómo calcular la distancia" },
-    { title: "Variable sensible", desc: "Elige la variable de desigualdad" },
+    { title: "Municipality", desc: "Select the Andalusian municipality" },
+    { title: "Accessibility", desc: "Choose the location type" },
+    { title: "Distance", desc: "Select how distance should be calculated" },
+    { title: "Sensitive attribute", desc: "Select the sensitive attribute" },
   ];
 
   return (
-    <div className="max-w-2xl mx-auto" px-6>
+    <div className="max-w-2xl mx-auto px-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
-          <span className="gradient-text">Unfair Urban Data</span>
+          <span className="gradient-text">Urban inequality data</span>
         </h1>
         <p className="text-muted-foreground">
-          Genera datasets de desigualdades urbanas para municipios de Andalucía.
-          Selecciona las opciones y lanza el pipeline de procesamiento.
+          Access and download urban inequality datasets for municipalities in Andalusian.
+          Select the desired options and run the processing pipeline.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ const Index = () => {
                 onClick={() => setStep(step - 1)}
                 disabled={step === 0}
               >
-                <ArrowLeft className="w-4 h-4 mr-1" /> Atrás
+                <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
 
               {step < 3 ? (
@@ -160,11 +160,11 @@ const Index = () => {
                   onClick={() => setStep(step + 1)}
                   disabled={!canNext[step]}
                 >
-                  Siguiente <ArrowRight className="w-4 h-4 ml-1" />
+                  Next <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} disabled={!canNext[step]}>
-                  <Rocket className="w-4 h-4 mr-1" /> Generar dataset
+                  <Rocket className="w-4 h-4 mr-1" /> Get dataset
                 </Button>
               )}
             </div>
@@ -175,29 +175,29 @@ const Index = () => {
       {step === 4 && (
         <div className="space-y-6">
           <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Configuración</h2>
+            <h2 className="text-lg font-semibold mb-4">Configuration</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-muted-foreground">Municipio:</span>
+                <span className="text-muted-foreground">Municipality:</span>
                 <span className="ml-2 font-medium">
                   {municipality?.name} ({municipality?.city_code})
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Localizaciones:</span>
+                <span className="text-muted-foreground">Locations:</span>
                 <span className="ml-2 font-medium">
                   {LOCATIONS_LABELS[locations]}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Distancia:</span>
+                <span className="text-muted-foreground">Distance:</span>
                 <span className="ml-2 font-medium">
                   {DIST_TYPE_LABELS[distType]}
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground">
-                  Variable sensible:
+                  Sensitive attribute:
                 </span>
                 <span className="ml-2 font-medium">
                   {biasVar !== null ? BIAS_VAR_LABELS[biasVar] : ""}
@@ -207,14 +207,14 @@ const Index = () => {
           </div>
 
           <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Progreso</h2>
+            <h2 className="text-lg font-semibold mb-4">Progress</h2>
             <JobProgress job={jobState} />
           </div>
 
           {jobState.status === "succeeded" && finishedJob?.result && (
             <div className="bg-card border rounded-xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Resultados</h2>
+                <h2 className="text-lg font-semibold">Results</h2>
                 <div className="flex gap-2">
                   {finishedJob.result.rds_url && (
                     <Button variant="outline" size="sm" asChild>
@@ -226,7 +226,7 @@ const Index = () => {
                   {finishedJob.result.zip_url && (
                     <Button size="sm" asChild>
                       <a href={finishedJob.result.zip_url} download>
-                        <FileArchive className="w-4 h-4 mr-1" /> .zip completo
+                        <FileArchive className="w-4 h-4 mr-1" /> .zip complete
                       </a>
                     </Button>
                   )}
@@ -242,7 +242,7 @@ const Index = () => {
                   variant="outline"
                   onClick={() => navigate(`/jobs/${jobId}`)}
                 >
-                  Ver detalles completos
+                  View full details
                 </Button>
                 <Button
                   variant="ghost"
@@ -253,7 +253,7 @@ const Index = () => {
                     setFinishedJob(null);
                   }}
                 >
-                  Nuevo dataset
+                  New dataset
                 </Button>
               </div>
             </div>
@@ -262,11 +262,10 @@ const Index = () => {
           {jobState.status === "failed" && (
             <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-6">
               <h3 className="font-semibold text-destructive mb-2">
-                Error en el procesamiento
+                Processing error
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Puede deberse a que OSRM no está disponible o a un error en los
-                datos de entrada.
+                This may be caused by OSRM being unavailable or by an input data error.
               </p>
               <Button
                 variant="outline"
@@ -277,7 +276,7 @@ const Index = () => {
                   setFinishedJob(null);
                 }}
               >
-                Reintentar
+                Try again
               </Button>
             </div>
           )}

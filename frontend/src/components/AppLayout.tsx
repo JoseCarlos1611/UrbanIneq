@@ -5,8 +5,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
 
   const links = [
-    { to: "/", label: "Generador", icon: Home },
-    { to: "/history", label: "Historial", icon: History },
+    { to: "/", label: "Generator", icon: Home },
+    { to: "/history", label: "History", icon: History },
   ];
 
   return (
@@ -15,7 +15,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="container flex items-center h-14 gap-6">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
             <BarChart3 className="w-5 h-5 text-primary" />
-            <span className="gradient-text">Unfair Urban Data</span>
+            <span className="gradient-text">UrbanIneq</span>
           </Link>
           <nav className="flex items-center gap-1 ml-auto">
             {links.map((l) => (

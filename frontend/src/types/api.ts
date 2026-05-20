@@ -11,7 +11,7 @@ export interface BiasRow {
   label: string;
   lower: number;
   greater: number;
-  u: number;
+  u?: number;
   variation: number;
   median: number;
 }
@@ -54,6 +54,13 @@ export interface JobImages {
   clinics_any?: string;
   y?: string;
   svar?: string;
+  x1?: string;
+  x2?: string;
+  x3?: string;
+  x4?: string;
+  x5?: string;
+  x6?: string;
+  x7?: string;
   [key: string]: string | undefined;
 }
 
@@ -76,35 +83,45 @@ export interface Job {
 }
 
 export const LOCATIONS_LABELS: Record<LocationsType, string> = {
-  parks: "Parques",
-  clinics_public: "Centros públicos",
-  clinics_any: "Todos los centros",
+  parks: "Urban green areas",
+  clinics_public: "Healthcare facilities (public)",
+  clinics_any: "Healthcare facilities (public and private)",
 };
 
 export const DIST_TYPE_LABELS: Record<DistType, string> = {
-  mean: "Media",
-  min: "Mínima",
-  max: "Máxima",
+  mean: "Average",
+  min: "Minimum",
+  max: "Maximum",
 };
 
 export const BIAS_VAR_LABELS: Record<number, string> = {
-  1: "Renta",
-  2: "Desempleo",
-  3: "Edad",
-  4: "Educación",
-  5: "Densidad",
-  6: "Hogares",
-  7: "Población extranjera",
+  1: "Population",
+  2: "Income",
+  3: "Proportion of children",
+  4: "Proportion of elderly population",
+  5: "Unemployment rate",
+  6: "Proportion of foreign population",
+  7: "Loneliness index",
+};
+
+export const BIAS_ATTRIBUTE_LABELS: Record<number, string> = {
+  1: "X_1 (Population)",
+  2: "X_2 (Income)",
+  3: "X_3 (Prop. of children)",
+  4: "X_4 (Prop. of elderly population)",
+  5: "X_5 (Unemployment rate)",
+  6: "X_6 (Prop. of foreign population)",
+  7: "X_7 (Loneliness index)",
 };
 
 export const STAGE_LABELS: Record<JobStage, string> = {
-  queued: "En cola",
-  downloading_ieca: "Descargando IECA",
-  downloading_ine: "Descargando INE",
-  reading_shapefiles: "Leyendo shapefiles",
-  routing: "Calculando rutas",
-  building_dataset: "Construyendo dataset",
-  plotting: "Generando mapas",
-  exporting: "Exportando resultados",
-  done: "Completado",
+  queued: "Queued",
+  downloading_ieca: "Downloading IECA data",
+  downloading_ine: "Downloading INE data",
+  reading_shapefiles: "Reading shapefiles",
+  routing: "Calculating routes",
+  building_dataset: "Building dataset",
+  plotting: "Generating maps",
+  exporting: "Exporting results",
+  done: "Completed",
 };

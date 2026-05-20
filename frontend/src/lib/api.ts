@@ -42,7 +42,7 @@ export async function fetchBiasTable(cityCode: string): Promise<BiasTableRespons
       label?: string;
       lower: number;
       greater: number;
-      u: number;
+      u?: number;
       variation: number;
       median: number;
     }>;

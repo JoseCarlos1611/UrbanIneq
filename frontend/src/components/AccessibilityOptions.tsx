@@ -14,15 +14,15 @@ const icons: Record<LocationsType, React.ReactNode> = {
 };
 
 const descriptions: Record<LocationsType, string> = {
-  parks: "Parques y zonas verdes urbanas",
-  clinics_public: "Solo centros sanitarios públicos",
-  clinics_any: "Centros públicos y privados",
+  parks: "Urban parks and green areas",
+  clinics_public: "Public healthcare facilities only",
+  clinics_any: "Public and private healthcare facilities",
 };
 
 export function AccessibilityOptions({ value, onChange }: Props) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-3">Variable de accesibilidad</label>
+      <label className="block text-sm font-medium mb-3">Accessibility variable</label>
       <div className="grid gap-3">
         {(Object.keys(LOCATIONS_LABELS) as LocationsType[]).map((key) => (
           <button

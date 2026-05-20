@@ -13,7 +13,7 @@ export function JobHistoryTable({ jobs }: JobHistoryTableProps) {
     return (
       <div className="bg-card border rounded-xl p-6 shadow-sm">
         <p className="text-sm text-muted-foreground">
-          No hay jobs en el historial.
+          There are no jobs in the history.
         </p>
       </div>
     );
@@ -25,13 +25,13 @@ export function JobHistoryTable({ jobs }: JobHistoryTableProps) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/40">
             <tr className="text-left">
-              <th className="px-4 py-3 font-medium">Municipio</th>
-              <th className="px-4 py-3 font-medium">Localización</th>
-              <th className="px-4 py-3 font-medium">Distancia</th>
-              <th className="px-4 py-3 font-medium">Variable</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Fecha</th>
-              <th className="px-4 py-3 font-medium">Acciones</th>
+              <th className="px-4 py-3 font-medium">Municipality</th>
+              <th className="px-4 py-3 font-medium">Location</th>
+              <th className="px-4 py-3 font-medium">Distance</th>
+              <th className="px-4 py-3 font-medium">Attribute</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -77,14 +77,14 @@ export function JobHistoryTable({ jobs }: JobHistoryTableProps) {
 
                 <td className="px-4 py-3 whitespace-nowrap">
                   {job.created_at
-                    ? new Date(job.created_at).toLocaleString("es-ES")
+                    ? new Date(job.created_at).toLocaleString("en-GB")
                     : "-"}
                 </td>
 
                 <td className="px-4 py-3">
                   <Button variant="outline" size="sm" asChild>
                     <Link to={`/jobs/${job.job_id}`}>
-                      Ver detalles
+                      View details
                     </Link>
                   </Button>
                 </td>

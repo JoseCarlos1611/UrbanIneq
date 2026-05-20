@@ -25,7 +25,7 @@ export function MunicipalitySearch({ value, onChange }: Props) {
         if (mounted) setAllMunicipalities(data);
       })
       .catch(() => {
-        // fallback silencioso al search remoto
+        // silent fallback to remote search
       })
       .finally(() => {
         if (mounted) setPrefetching(false);
@@ -81,7 +81,7 @@ export function MunicipalitySearch({ value, onChange }: Props) {
 
   return (
     <div ref={ref} className="relative">
-      <label className="block text-sm font-medium mb-2">Municipio</label>
+      <label className="block text-sm font-medium mb-2">Municipality</label>
 
       {value ? (
         <div className="flex items-center gap-3 p-3 bg-card border rounded-lg">
@@ -98,7 +98,7 @@ export function MunicipalitySearch({ value, onChange }: Props) {
             }}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Cambiar
+            Change
           </button>
         </div>
       ) : (
@@ -106,7 +106,7 @@ export function MunicipalitySearch({ value, onChange }: Props) {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar municipio (ej: Sevilla, Málaga...)"
+              placeholder="Search municipality (e.g., Seville, Málaga...)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => {
@@ -141,7 +141,7 @@ export function MunicipalitySearch({ value, onChange }: Props) {
 
           {open && query.length >= 2 && !loading && !prefetching && results.length === 0 && (
             <div className="absolute z-50 w-full mt-1 bg-popover border rounded-lg shadow-lg p-4 text-sm text-muted-foreground">
-              No se encontraron municipios
+              No municipalities found
             </div>
           )}
         </>

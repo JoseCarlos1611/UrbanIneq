@@ -8,11 +8,18 @@ interface Props {
 }
 
 const IMAGE_LABELS: Record<string, string> = {
-  greenzones: "Zonas Verdes",
-  clinics_public: "Centros Públicos",
-  clinics_any: "Todos los Centros",
-  y: "Mapa de Distancias (Y)",
-  svar: "Variable Sensible",
+  greenzones: "Urban green areas",
+  clinics_public: "Healthcare facilities (public)",
+  clinics_any: "Healthcare facilities (public and private)",
+  y: "(Avg/min/max) distances",
+  svar: "Sensitive attribute",
+  x1: "Sensitive attribute",
+  x2: "Sensitive attribute",
+  x3: "Sensitive attribute",
+  x4: "Sensitive attribute",
+  x5: "Sensitive attribute",
+  x6: "Sensitive attribute",
+  x7: "Sensitive attribute",
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -45,6 +52,7 @@ export function ResultsGallery({ images }: Props) {
                 <button
                   onClick={() => setFullscreen(url)}
                   className="p-2 bg-card rounded-md shadow-md hover:bg-muted transition-colors"
+                  aria-label={`Open ${IMAGE_LABELS[key] || key}`}
                 >
                   <Maximize2 className="w-4 h-4" />
                 </button>
@@ -52,13 +60,11 @@ export function ResultsGallery({ images }: Props) {
                   href={url}
                   download
                   className="p-2 bg-card rounded-md shadow-md hover:bg-muted transition-colors"
+                  aria-label={`Download ${IMAGE_LABELS[key] || key}`}
                 >
                   <Download className="w-4 h-4" />
                 </a>
               </div>
-            </div>
-            <div className="p-3">
-              <h4 className="font-medium text-sm">{IMAGE_LABELS[key] || key}</h4>
             </div>
           </div>
         ))}
@@ -66,11 +72,11 @@ export function ResultsGallery({ images }: Props) {
 
       <Dialog open={!!fullscreen} onOpenChange={() => setFullscreen(null)}>
         <DialogContent className="w-full max-w-7xl px-6 lg:px-8 p-2">
-          <DialogTitle className="sr-only">Vista ampliada del mapa</DialogTitle>
+          <DialogTitle className="sr-only">Expanded map view</DialogTitle>
           {fullscreen && (
             <img
               src={fullscreen}
-              alt="Mapa ampliado"
+              alt="Expanded map"
               className="w-full rounded"
             />
           )}

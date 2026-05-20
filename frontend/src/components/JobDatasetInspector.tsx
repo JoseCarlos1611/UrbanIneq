@@ -90,7 +90,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
     return (
       <div className="bg-card border rounded-xl p-6 shadow-sm">
         <h2 className="font-semibold mb-2">Dataset</h2>
-        <p className="text-sm text-muted-foreground">Inspeccionando .rds...</p>
+        <p className="text-sm text-muted-foreground">Inspecting .rds...</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
     return (
       <div className="bg-card border rounded-xl p-6 shadow-sm">
         <h2 className="font-semibold mb-2">Dataset</h2>
-        <p className="text-sm text-muted-foreground">No se pudo cargar la inspección del .rds.</p>
+        <p className="text-sm text-muted-foreground">The .rds inspection could not be loaded.</p>
       </div>
     );
   }
@@ -120,21 +120,21 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
             size="sm"
             onClick={() => setTab("summary")}
           >
-            Resumen
+            summary
           </Button>
           <Button
             variant={tab === "variables" ? "default" : "outline"}
             size="sm"
             onClick={() => setTab("variables")}
           >
-            Variables
+            attributes
           </Button>
           <Button
             variant={tab === "distributions" ? "default" : "outline"}
             size="sm"
             onClick={() => setTab("distributions")}
           >
-            Distribuciones
+            Frequency table
           </Button>
         </div>
       </div>
@@ -143,27 +143,27 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="border rounded-lg p-4">
-              <div className="text-muted-foreground text-xs mb-1">Municipio</div>
+              <div className="text-muted-foreground text-xs mb-1">Municipality</div>
               <div className="font-medium">{data.municipality ?? "—"}</div>
             </div>
             <div className="border rounded-lg p-4">
-              <div className="text-muted-foreground text-xs mb-1">Tablas disponibles</div>
+              <div className="text-muted-foreground text-xs mb-1">Available tables</div>
               <div className="font-medium">{data.available_tables.join(", ")}</div>
             </div>
             <div className="border rounded-lg p-4">
-              <div className="text-muted-foreground text-xs mb-1">Tabla principal</div>
+              <div className="text-muted-foreground text-xs mb-1">Main table</div>
               <div className="font-medium">{data.preferred_table}</div>
             </div>
           </div>
 
           <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-3">Dimensiones</h3>
+            <h3 className="font-medium mb-3">Dimensions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               {Object.entries(data.table_dimensions).map(([name, dims]) => (
                 <div key={name} className="flex items-center justify-between border rounded-md px-3 py-2">
                   <span className="font-medium">{name}</span>
                   <span className="text-muted-foreground">
-                    {dims.rows} filas · {dims.cols} columnas
+                    {dims.rows} rows · {dims.cols} columns
                   </span>
                 </div>
               ))}
@@ -172,7 +172,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
 
           <div className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h3 className="font-medium">Vista previa</h3>
+              <h3 className="font-medium">Preview</h3>
               <select
                 className="border rounded-md px-3 py-2 text-sm bg-background"
                 value={selectedTable}
@@ -210,7 +210,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
                   {!previewRows.length && (
                     <tr>
                       <td className="px-3 py-4 text-muted-foreground" colSpan={previewColumns.length || 1}>
-                        Sin vista previa disponible.
+                        No preview available.
                       </td>
                     </tr>
                   )}
@@ -226,14 +226,10 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
           <table className="w-full text-xs">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-left px-3 py-2 font-medium">Variable</th>
-                <th className="text-left px-3 py-2 font-medium">Tipo</th>
-                <th className="text-right px-3 py-2 font-medium">No nulos</th>
-                <th className="text-right px-3 py-2 font-medium">Nulos</th>
-                <th className="text-right px-3 py-2 font-medium">Únicos</th>
+                <th className="text-left px-3 py-2 font-medium">Attribute</th>
                 <th className="text-right px-3 py-2 font-medium">Min</th>
-                <th className="text-right px-3 py-2 font-medium">Media</th>
-                <th className="text-right px-3 py-2 font-medium">Mediana</th>
+                <th className="text-right px-3 py-2 font-medium">Average</th>
+                <th className="text-right px-3 py-2 font-medium">Median</th>
                 <th className="text-right px-3 py-2 font-medium">Max</th>
                 <th className="text-right px-3 py-2 font-medium">SD</th>
               </tr>
@@ -242,10 +238,6 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
               {data.variables.map((v) => (
                 <tr key={v.name} className="border-t">
                   <td className="px-3 py-2 font-medium">{v.name}</td>
-                  <td className="px-3 py-2">{v.type}</td>
-                  <td className="px-3 py-2 text-right">{v.non_missing}</td>
-                  <td className="px-3 py-2 text-right">{v.missing}</td>
-                  <td className="px-3 py-2 text-right">{v.unique}</td>
                   <td className="px-3 py-2 text-right">{formatValue(v.min)}</td>
                   <td className="px-3 py-2 text-right">{formatValue(v.mean)}</td>
                   <td className="px-3 py-2 text-right">{formatValue(v.median)}</td>
@@ -261,7 +253,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
       {tab === "distributions" && (
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-sm font-medium">Variable numérica</label>
+            <label className="text-sm font-medium">Numeric attribute</label>
             <select
               className="border rounded-md px-3 py-2 text-sm bg-background"
               value={selectedVariable}
@@ -283,11 +275,11 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
                   <div className="font-medium">{selectedDistribution.min.toFixed(3)}</div>
                 </div>
                 <div className="border rounded-md p-3">
-                  <div className="text-muted-foreground text-xs mb-1">Media</div>
+                  <div className="text-muted-foreground text-xs mb-1">Average</div>
                   <div className="font-medium">{selectedDistribution.mean.toFixed(3)}</div>
                 </div>
                 <div className="border rounded-md p-3">
-                  <div className="text-muted-foreground text-xs mb-1">Mediana</div>
+                  <div className="text-muted-foreground text-xs mb-1">Median</div>
                   <div className="font-medium">{selectedDistribution.median.toFixed(3)}</div>
                 </div>
                 <div className="border rounded-md p-3">
@@ -305,7 +297,7 @@ export function JobDatasetInspector({ jobId }: { jobId: string }) {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No hay distribuciones disponibles.
+              No frequency tables are available.
             </p>
           )}
         </div>
