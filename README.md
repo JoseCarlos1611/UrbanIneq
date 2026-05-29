@@ -8,7 +8,15 @@ The platform provides a complete workflow for generating municipality-level data
 
 UrbanIneq is not a fairness-correction framework. It does not automatically correct or mitigate inequalities. Instead, it provides an open data and accessibility infrastructure that helps researchers and policy makers explore, quantify, and visualize potential accessibility disparities affecting different population groups.
 
----
+## Related publication
+
+This repository accompanies the following publication:
+
+Jiménez-Revuelta, J.C. and Montero, I. and Ramírez-Cobo, P. (2026)
+*UrbanIneq: An Open Framework for Urban Accessibility Datasets with Potential Socio-Spatial Inequality Patterns*.
+Preprint available through Zenodo: 10.5281/zenodo.20443535
+
+If you use UrbanIneq in your research, please cite the corresponding article.
 
 ## 🚀 Quick deployment
 
