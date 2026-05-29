@@ -1,28 +1,37 @@
-version: '3.9'
-
 services:
-  api:
+  data-init:
     build:
       context: ./backend
-      dockerfile: Dockerfile.api
-    container_name: unfair-urban-fastapi
-    depends_on:
-      - r-plumber
-    ports:
-      - "8080:8080"
+      dockerfile: Dockerfile.r
+    image: urbanineq-r:latest
+    container_name: unfair-urban-data-init
+    command: >
+      Rscript -e "Sys.setenv(DOWNLOAD_IECA='true', DOWNLOAD_INE=Sys.getenv('DOWNLOAD_INE', 'false')); source('/app/datadl.R')"
     volumes:
-      - ./backend/results:/app/results
       - ./backend/IECA:/app/IECA
       - ./backend/INE:/app/INE
+    restart: "no"
+
+  andalucia-osrm:
+    build:
+      context: ./backend/andalucia-osrm
+      dockerfile: Dockerfile
+    container_name: andalucia-osrm
+    ports:
+      - "5001:5001"
     restart: unless-stopped
 
   r-plumber:
     build:
       context: ./backend
       dockerfile: Dockerfile.r
+    image: urbanineq-r:latest
     container_name: unfair-urban-r
     depends_on:
-      - andalucia-osrm
+      data-init:
+        condition: service_completed_successfully
+      andalucia-osrm:
+        condition: service_started
     environment:
       OSRM_URL: http://andalucia-osrm:5001/
     ports:
@@ -33,12 +42,22 @@ services:
       - ./backend/INE:/app/INE
     restart: unless-stopped
 
-  andalucia-osrm:
+  api:
     build:
-      context: ./backend/andalucia-osrm
-    container_name: andalucia-osrm
+      context: ./backend
+      dockerfile: Dockerfile.api
+    container_name: unfair-urban-fastapi
+    depends_on:
+      data-init:
+        condition: service_completed_successfully
+      r-plumber:
+        condition: service_started
     ports:
-      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ./backend/results:/app/results
+      - ./backend/IECA:/app/IECA
+      - ./backend/INE:/app/INE
     restart: unless-stopped
 
   frontend:

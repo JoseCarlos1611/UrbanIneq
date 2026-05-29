@@ -1,0 +1,42 @@
+# IECA is downloaded automatically by the Docker data-init service
+backend/IECA/*
+!backend/IECA/.gitkeep
+
+# Keep INE under version control by default.
+# Do NOT ignore backend/INE unless you also implement automatic INE download.
+
+# Generated results
+backend/results/*
+!backend/results/.gitkeep
+results/*
+!results/.gitkeep
+
+# OSRM / OpenStreetMap heavy generated/downloaded files
+*.osm.pbf
+*.osrm
+*.osrm.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.vite/
+
+# System/editor temporary files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo

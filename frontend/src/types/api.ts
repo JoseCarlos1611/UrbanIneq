@@ -11,13 +11,15 @@ export interface BiasRow {
   label: string;
   lower: number;
   greater: number;
-  u?: number;
+  u: number;
   variation: number;
   median: number;
 }
 
 export interface BiasTableResponse {
-  suggested: number;
+  cache_id?: string | null;
+  locations?: LocationsType;
+  dist_type?: DistType;
   rows: BiasRow[];
 }
 
@@ -46,6 +48,7 @@ export interface JobConfig {
   locations: LocationsType;
   dist_type: DistType;
   bias_var: number;
+  cache_id?: string | null;
 }
 
 export interface JobImages {
@@ -54,13 +57,6 @@ export interface JobImages {
   clinics_any?: string;
   y?: string;
   svar?: string;
-  x1?: string;
-  x2?: string;
-  x3?: string;
-  x4?: string;
-  x5?: string;
-  x6?: string;
-  x7?: string;
   [key: string]: string | undefined;
 }
 
@@ -97,21 +93,11 @@ export const DIST_TYPE_LABELS: Record<DistType, string> = {
 export const BIAS_VAR_LABELS: Record<number, string> = {
   1: "Population",
   2: "Income",
-  3: "Proportion of children",
-  4: "Proportion of elderly population",
+  3: "Prop. of children",
+  4: "Prop. of elderly population",
   5: "Unemployment rate",
-  6: "Proportion of foreign population",
+  6: "Prop. of foreign population",
   7: "Loneliness index",
-};
-
-export const BIAS_ATTRIBUTE_LABELS: Record<number, string> = {
-  1: "X_1 (Population)",
-  2: "X_2 (Income)",
-  3: "X_3 (Prop. of children)",
-  4: "X_4 (Prop. of elderly population)",
-  5: "X_5 (Unemployment rate)",
-  6: "X_6 (Prop. of foreign population)",
-  7: "X_7 (Loneliness index)",
 };
 
 export const STAGE_LABELS: Record<JobStage, string> = {
@@ -119,7 +105,7 @@ export const STAGE_LABELS: Record<JobStage, string> = {
   downloading_ieca: "Downloading IECA data",
   downloading_ine: "Downloading INE data",
   reading_shapefiles: "Reading shapefiles",
-  routing: "Calculating routes",
+  routing: "Computing routes",
   building_dataset: "Building dataset",
   plotting: "Generating maps",
   exporting: "Exporting results",

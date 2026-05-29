@@ -1,5 +1,190 @@
 [
   {
+    "job_id": "41059-parks-mean-x7-20260528231233",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-05-28T23:12:33.803135+00:00",
+    "config": {
+      "city_code": "41059",
+      "city_name": "Mairena del Aljarafe",
+      "locations": "parks",
+      "dist_type": "mean",
+      "bias_var": 7,
+      "cache_id": "41059__parks__mean"
+    },
+    "logs": [
+      {
+        "ts": "2026-05-28T23:12:33.803173+00:00",
+        "level": "info",
+        "msg": "Job queued."
+      },
+      {
+        "ts": "2026-05-28T23:12:33.972006+00:00",
+        "level": "info",
+        "msg": "Preparing municipality and spatial data."
+      },
+      {
+        "ts": "2026-05-28T23:12:34.017224+00:00",
+        "level": "info",
+        "msg": "Loading socio-economic and census data."
+      },
+      {
+        "ts": "2026-05-28T23:12:34.060402+00:00",
+        "level": "info",
+        "msg": "Starting R geospatial processing pipeline."
+      },
+      {
+        "ts": "2026-05-28T23:12:37.719501+00:00",
+        "level": "info",
+        "msg": "R pipeline completed. Collecting generated files."
+      },
+      {
+        "ts": "2026-05-28T23:12:37.810096+00:00",
+        "level": "info",
+        "msg": "R service returned job id 41059-parks-20260528231234; keeping frontend job id 41059-parks-mean-x7-20260528231233."
+      },
+      {
+        "ts": "2026-05-28T23:12:37.856973+00:00",
+        "level": "info",
+        "msg": "Maps and dataset files are ready."
+      },
+      {
+        "ts": "2026-05-28T23:12:37.918365+00:00",
+        "level": "info",
+        "msg": "Job completed successfully."
+      }
+    ],
+    "filenames": [
+      "41059-ugs-bias_table.csv",
+      "41059-ugs-centroids.csv",
+      "41059-ugs-centroids.geojson",
+      "41059-ugs-clinics_any.geojson",
+      "41059-ugs-clinics_public.geojson",
+      "41059-ugs-greenzones.geojson",
+      "41059-ugs-metadata.json",
+      "41059-ugs-municipality.geojson",
+      "41059-ugs-raw.csv",
+      "41059-ugs-raw.geojson",
+      "41059-ugs-x.csv",
+      "41059-ugs-xnorm.csv",
+      "41059-ugs-y.csv",
+      "41059-ugs.rds",
+      "41059-ugs_y.png",
+      "41059_clinics_any.png",
+      "41059_clinics_public.png",
+      "41059_greenzones.png",
+      "41059_x7.png"
+    ]
+  },
+  {
+    "job_id": "04011-parks-min-x4-20260528215307",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-05-28T21:53:07.826840+00:00",
+    "config": {
+      "city_code": "04011",
+      "city_name": "Alhama de Almería",
+      "locations": "parks",
+      "dist_type": "min",
+      "bias_var": 4,
+      "cache_id": "04011__parks__min"
+    },
+    "logs": [
+      {
+        "ts": "2026-05-28T21:53:07.826887+00:00",
+        "level": "info",
+        "msg": "Job queued."
+      },
+      {
+        "ts": "2026-05-28T21:53:07.921963+00:00",
+        "level": "info",
+        "msg": "Preparing municipality and spatial data."
+      },
+      {
+        "ts": "2026-05-28T21:53:07.990514+00:00",
+        "level": "info",
+        "msg": "Loading socio-economic and census data."
+      },
+      {
+        "ts": "2026-05-28T21:53:08.049190+00:00",
+        "level": "info",
+        "msg": "Starting R geospatial processing pipeline."
+      },
+      {
+        "ts": "2026-05-28T21:53:10.615257+00:00",
+        "level": "info",
+        "msg": "R pipeline completed. Collecting generated files."
+      },
+      {
+        "ts": "2026-05-28T21:53:10.753546+00:00",
+        "level": "info",
+        "msg": "R service returned job id 04011-parks-20260528215308; keeping frontend job id 04011-parks-min-x4-20260528215307."
+      },
+      {
+        "ts": "2026-05-28T21:53:10.793580+00:00",
+        "level": "info",
+        "msg": "Maps and dataset files are ready."
+      },
+      {
+        "ts": "2026-05-28T21:53:10.835844+00:00",
+        "level": "info",
+        "msg": "Job completed successfully."
+      }
+    ],
+    "filenames": [
+      "04011-ugs-bias_table.csv",
+      "04011-ugs-centroids.csv",
+      "04011-ugs-centroids.geojson",
+      "04011-ugs-clinics_any.geojson",
+      "04011-ugs-clinics_public.geojson",
+      "04011-ugs-greenzones.geojson",
+      "04011-ugs-metadata.json",
+      "04011-ugs-municipality.geojson",
+      "04011-ugs-raw.csv",
+      "04011-ugs-raw.geojson",
+      "04011-ugs-x.csv",
+      "04011-ugs-xnorm.csv",
+      "04011-ugs-y.csv",
+      "04011-ugs.rds",
+      "04011-ugs_y.png",
+      "04011_clinics_any.png",
+      "04011_clinics_public.png",
+      "04011_greenzones.png",
+      "04011_x4.png"
+    ]
+  },
+  {
+    "job_id": "41058-parks-20260528170006",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-05-28T17:00:09.324936+00:00",
+    "config": {
+      "city_code": "41058",
+      "city_name": "Mairena del Alcor",
+      "locations": "parks",
+      "dist_type": "max",
+      "bias_var": 7
+    },
+    "logs": [
+      {
+        "ts": "2026-05-28T17:00:09.325156+00:00",
+        "level": "info",
+        "msg": "Job completado correctamente."
+      }
+    ],
+    "filenames": [
+      "41058-ugs.rds",
+      "41058-ugs_y.png",
+      "41058_clinics_any.png",
+      "41058_clinics_public.png",
+      "41058_greenzones.png",
+      "41058_x7.png"
+    ]
+  },
+  {
     "job_id": "41016-clinics_public-20260403171114",
     "status": "succeeded",
     "stage": "done",

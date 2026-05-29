@@ -1,26 +1,42 @@
-version: '3.9'
+# This file is kept only for reference.
+# Prefer running Docker Compose from the project root with ../docker-compose.yml:
+#   cd ..
+#   docker compose up --build
 
 services:
-  api:
+  data-init:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.api
-    container_name: unfair-urban-fastapi
-    depends_on:
-      - r-plumber
-    ports:
-      - "8080:8080"
+      context: .
+      dockerfile: Dockerfile.r
+    image: urbanineq-r:latest
+    container_name: unfair-urban-data-init
+    command: >
+      Rscript -e "Sys.setenv(DOWNLOAD_IECA='true', DOWNLOAD_INE=Sys.getenv('DOWNLOAD_INE', 'false')); source('/app/datadl.R')"
     volumes:
-      - ./results:/app/results
+      - ./IECA:/app/IECA
+      - ./INE:/app/INE
+    restart: "no"
+
+  andalucia-osrm:
+    build:
+      context: ./andalucia-osrm
+      dockerfile: Dockerfile
+    container_name: andalucia-osrm
+    ports:
+      - "5001:5001"
     restart: unless-stopped
 
   r-plumber:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile.r
+    image: urbanineq-r:latest
     container_name: unfair-urban-r
     depends_on:
-      - andalucia-osrm
+      data-init:
+        condition: service_completed_successfully
+      andalucia-osrm:
+        condition: service_started
     environment:
       OSRM_URL: http://andalucia-osrm:5001/
     ports:
@@ -29,12 +45,4 @@ services:
       - ./results:/app/results
       - ./IECA:/app/IECA
       - ./INE:/app/INE
-    restart: unless-stopped
-
-  andalucia-osrm:
-    build:
-      context: ./frontend/andalucia-osrm
-    container_name: andalucia-osrm
-    ports:
-      - "5001:5001"
     restart: unless-stopped

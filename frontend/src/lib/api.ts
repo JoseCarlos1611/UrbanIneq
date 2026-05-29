@@ -3,9 +3,18 @@ import type {
   BiasTableResponse,
   Job,
   JobConfig,
+  LocationsType,
+  DistType,
 } from "@/types/api";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+
+export function resolveApiUrl(url?: string | null): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_BASE}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -34,23 +43,42 @@ export async function getAllMunicipalities(): Promise<Municipality[]> {
   return apiFetch<Municipality[]>("/municipalities/all");
 }
 
-export async function fetchBiasTable(cityCode: string): Promise<BiasTableResponse> {
+export async function fetchBiasTable(
+  cityCode: string,
+  locations: LocationsType = "parks",
+  distType: DistType = "mean"
+): Promise<BiasTableResponse> {
+  const safeLocations: LocationsType = locations ?? "parks";
+  const safeDistType: DistType = distType ?? "mean";
+
   const raw = await apiFetch<{
-    suggested: number;
-    rows: Array<{
+    available?: boolean;
+    cache_id?: string | null;
+    locations?: LocationsType;
+    dist_type?: DistType;
+    message?: string | null;
+    rows?: Array<{
       key: string;
       label?: string;
       lower: number;
       greater: number;
-      u?: number;
+      u: number;
       variation: number;
       median: number;
     }>;
-  }>(`/bias-table/${encodeURIComponent(cityCode)}`);
+  }>(
+    `/bias-table/${encodeURIComponent(cityCode)}?locations=${encodeURIComponent(
+      safeLocations
+    )}&dist_type=${encodeURIComponent(safeDistType)}`
+  );
 
   return {
-    suggested: raw.suggested,
-    rows: raw.rows.map((row) => ({
+    available: raw.available ?? true,
+    cache_id: raw.cache_id ?? null,
+    locations: raw.locations,
+    dist_type: raw.dist_type,
+    message: raw.message ?? null,
+    rows: (raw.rows ?? []).map((row) => ({
       ...row,
       label: row.label ?? row.key,
     })),
@@ -123,6 +151,7 @@ export async function fetchJobDatasetInspect(
 ): Promise<DatasetInspectResponse> {
   return apiFetch<DatasetInspectResponse>(`/jobs/${jobId}/dataset-inspect`);
 }
+
 export function subscribeToJob(
   jobId: string,
   onMessage: (partial: Partial<Job>) => void,
@@ -143,6 +172,10 @@ export function subscribeToJob(
       }
     } catch (error) {
       console.error("subscribeToJob error:", error);
+
+      if (!cancelled) {
+        timer = window.setTimeout(tick, intervalMs);
+      }
     }
   };
 
@@ -150,6 +183,7 @@ export function subscribeToJob(
 
   return () => {
     cancelled = true;
+
     if (timer !== null) {
       window.clearTimeout(timer);
     }
