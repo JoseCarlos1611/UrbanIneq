@@ -14,7 +14,7 @@ This repository accompanies the following publication:
 
 Jiménez-Revuelta, J.C. and Montero, I. and Ramírez-Cobo, P. (2026)
 *UrbanIneq: An Open Framework for Urban Accessibility Datasets with Potential Socio-Spatial Inequality Patterns*.
-Preprint available through Zenodo: 10.5281/zenodo.20443535
+Preprint available through Zenodo: [10.5281/zenodo.20443535](https://zenodo.org/records/20443535)
 
 If you use UrbanIneq in your research, please cite the corresponding article.
 
