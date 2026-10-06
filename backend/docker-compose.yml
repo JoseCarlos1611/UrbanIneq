@@ -1,30 +1,78 @@
-# This file is kept only for reference.
-# Prefer running Docker Compose from the project root with ../docker-compose.yml:
-#   cd ..
-#   docker compose up --build
-
+# Reference compose for running from backend/.
+# The recommended command remains: run ../docker-compose.yml from the project root.
 services:
   data-init:
     build:
       context: .
-      dockerfile: Dockerfile.r
-    image: urbanineq-r:latest
+      dockerfile: Dockerfile.data-init
+    image: urbanineq-data-init:latest
     container_name: unfair-urban-data-init
     command: >
       Rscript -e "Sys.setenv(DOWNLOAD_IECA='true', DOWNLOAD_INE=Sys.getenv('DOWNLOAD_INE', 'false')); source('/app/datadl.R')"
     volumes:
+      - ./datadl.R:/app/datadl.R:ro
       - ./IECA:/app/IECA
       - ./INE:/app/INE
+    restart: "no"
+
+  osrm-data-init:
+    image: alpine:3.20
+    container_name: unfair-urban-osrm-data-init
+    environment:
+      DOWNLOAD_URL: https://download.geofabrik.de/europe/spain/andalucia-latest.osm.pbf
+      OSM_FILE: andalucia-latest.osm.pbf
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        mkdir -p /data
+        if [ -f /data/.urbanineq-osrm-ready-v1 ]; then
+          echo "[UrbanIneq/OSRM download] Prepared dataset already exists; skipping download."
+        elif [ -s "/data/$${OSM_FILE}" ]; then
+          echo "[UrbanIneq/OSRM download] Existing OSM extract found; reusing it."
+        else
+          echo "[UrbanIneq/OSRM download] Downloading $${DOWNLOAD_URL}"
+          wget -O "/data/$${OSM_FILE}.part" "$${DOWNLOAD_URL}"
+          mv "/data/$${OSM_FILE}.part" "/data/$${OSM_FILE}"
+        fi
+    volumes:
+      - osrm-data:/data
     restart: "no"
 
   andalucia-osrm:
     build:
       context: ./andalucia-osrm
       dockerfile: Dockerfile
+    image: urbanineq-andalucia-osrm:latest
     container_name: andalucia-osrm
+    depends_on:
+      osrm-data-init:
+        condition: service_completed_successfully
+    environment:
+      OSM_FILE: andalucia-latest.osm.pbf
+      OSRM_FILE: andalucia-latest.osrm
+    volumes:
+      - osrm-data:/data
     ports:
       - "5001:5001"
     restart: unless-stopped
+
+  osrm-ready:
+    image: alpine:3.20
+    container_name: unfair-urban-osrm-ready
+    depends_on:
+      andalucia-osrm:
+        condition: service_started
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        echo "[UrbanIneq/OSRM ready] Waiting for routing service..."
+        until wget -q -O /dev/null "http://andalucia-osrm:5001/nearest/v1/foot/-5.9845,37.3891?number=1"; do
+          sleep 5
+        done
+        echo "[UrbanIneq/OSRM ready] Routing service is ready."
+    restart: "no"
 
   r-plumber:
     build:
@@ -35,14 +83,21 @@ services:
     depends_on:
       data-init:
         condition: service_completed_successfully
-      andalucia-osrm:
-        condition: service_started
+      osrm-ready:
+        condition: service_completed_successfully
     environment:
       OSRM_URL: http://andalucia-osrm:5001/
     ports:
       - "8000:8000"
     volumes:
-      - ./results:/app/results
-      - ./IECA:/app/IECA
-      - ./INE:/app/INE
+      - .:/app
+    command:
+      - R
+      - -q
+      - -e
+      - "pr <- plumber::plumb('plumber.R'); pr$$run(host='0.0.0.0', port=8000)"
     restart: unless-stopped
+
+volumes:
+  osrm-data:
+    name: urbanineq-osrm-data

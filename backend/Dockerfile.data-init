@@ -1,0 +1,14 @@
+FROM r-base:4.4.1
+
+WORKDIR /app
+
+# datadl.R only uses base R download/unzip functionality. It does not need the
+# very large rocker/geospatial image used by Plumber.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY datadl.R ./
+RUN mkdir -p /app/IECA /app/INE
+
+CMD ["Rscript", "-e", "Sys.setenv(DOWNLOAD_IECA='true', DOWNLOAD_INE=Sys.getenv('DOWNLOAD_INE', 'false')); source('/app/datadl.R')"]

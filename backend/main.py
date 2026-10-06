@@ -4,6 +4,7 @@ import json
 import re
 import unicodedata
 import zipfile
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -87,6 +88,13 @@ app.add_middleware(
 )
 
 _MUNICIPALITIES_CACHE: Optional[List[Dict[str, str]]] = None
+_REGISTRY_LOCK = threading.RLock()
+_REGISTRY_CACHE: List[Dict[str, Any]] = []
+_REGISTRY_INDEX: Dict[str, Dict[str, Any]] = {}
+_REGISTRY_MTIME_NS: Optional[int] = None
+_REGISTRY_LOADED = False
+_CITY_FILES_CACHE: Dict[str, tuple[int, List[Path]]] = {}
+_LEGACY_JOBS_CACHE: tuple[Optional[int], List[Dict[str, Any]]] = (None, [])
 
 
 # -------------------------------------------------------------------
@@ -238,44 +246,57 @@ def resolve_city(city_code: Optional[str], city_name: Optional[str]) -> Dict[str
 # Job registry
 # -------------------------------------------------------------------
 
+def _registry_stamp() -> Optional[int]:
+    try:
+        return REGISTRY_PATH.stat().st_mtime_ns
+    except FileNotFoundError:
+        return None
+
+
+def _set_registry_cache(entries: List[Dict[str, Any]]) -> None:
+    global _REGISTRY_CACHE, _REGISTRY_INDEX, _REGISTRY_MTIME_NS, _REGISTRY_LOADED
+    _REGISTRY_CACHE = entries
+    _REGISTRY_INDEX = {str(e.get("job_id")): e for e in entries if e.get("job_id")}
+    _REGISTRY_MTIME_NS = _registry_stamp()
+    _REGISTRY_LOADED = True
+
+
 def load_registry() -> List[Dict[str, Any]]:
-    data = safe_json_load(REGISTRY_PATH, default=[])
-
-    if isinstance(data, list):
-        return data
-
-    return []
+    global _REGISTRY_LOADED
+    with _REGISTRY_LOCK:
+        stamp = _registry_stamp()
+        if _REGISTRY_LOADED and stamp == _REGISTRY_MTIME_NS:
+            return _REGISTRY_CACHE
+        data = safe_json_load(REGISTRY_PATH, default=[])
+        entries = data if isinstance(data, list) else []
+        _set_registry_cache(entries)
+        return _REGISTRY_CACHE
 
 
 def save_registry(entries: List[Dict[str, Any]]) -> None:
-    safe_json_dump(REGISTRY_PATH, entries)
+    with _REGISTRY_LOCK:
+        safe_json_dump(REGISTRY_PATH, entries)
+        _set_registry_cache(entries)
 
 
 def upsert_registry_entry(entry: Dict[str, Any]) -> None:
-    entries = load_registry()
-    filtered = [e for e in entries if e.get("job_id") != entry.get("job_id")]
-    filtered.append(entry)
-    filtered.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    save_registry(filtered)
+    with _REGISTRY_LOCK:
+        entries = list(load_registry())
+        filtered = [e for e in entries if e.get("job_id") != entry.get("job_id")]
+        filtered.append(entry)
+        filtered.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        save_registry(filtered)
 
 
 def get_registry_entry(job_id: str) -> Optional[Dict[str, Any]]:
-    for entry in load_registry():
-        if entry.get("job_id") == job_id:
-            return entry
-
-    return None
+    with _REGISTRY_LOCK:
+        load_registry()
+        return _REGISTRY_INDEX.get(job_id)
 
 
 def append_job_log(entry: Dict[str, Any], message: str, level: str = "info") -> None:
     logs = entry.setdefault("logs", [])
-    logs.append(
-        {
-            "ts": utc_now_iso(),
-            "level": level,
-            "msg": message,
-        }
-    )
+    logs.append({"ts": utc_now_iso(), "level": level, "msg": message})
 
 
 def update_job_entry(
@@ -288,27 +309,21 @@ def update_job_entry(
     level: str = "info",
     filenames: Optional[List[str]] = None,
 ) -> None:
-    entry = get_registry_entry(job_id)
-
-    if not entry:
-        return
-
-    if status is not None:
-        entry["status"] = status
-
-    if stage is not None:
-        entry["stage"] = stage
-
-    if progress is not None:
-        entry["progress"] = max(0, min(progress, 100))
-
-    if filenames is not None:
-        entry["filenames"] = filenames
-
-    if message:
-        append_job_log(entry, message, level=level)
-
-    upsert_registry_entry(entry)
+    with _REGISTRY_LOCK:
+        entry = get_registry_entry(job_id)
+        if not entry:
+            return
+        if status is not None:
+            entry["status"] = status
+        if stage is not None:
+            entry["stage"] = stage
+        if progress is not None:
+            entry["progress"] = max(0, min(progress, 100))
+        if filenames is not None:
+            entry["filenames"] = filenames
+        if message:
+            append_job_log(entry, message, level=level)
+        upsert_registry_entry(entry)
 
 
 # -------------------------------------------------------------------
@@ -328,19 +343,28 @@ def is_internal_result_file(path: Path) -> bool:
     return True
 
 
+def _results_dir_stamp() -> int:
+    try:
+        return RESULTS_DIR.stat().st_mtime_ns
+    except FileNotFoundError:
+        return 0
+
+
 def collect_city_files(city_code: str) -> List[Path]:
-    out: List[Path] = []
+    stamp = _results_dir_stamp()
+    cached = _CITY_FILES_CACHE.get(city_code)
+    if cached and cached[0] == stamp:
+        return cached[1]
 
-    for path in RESULTS_DIR.iterdir():
-        if not is_internal_result_file(path):
-            continue
-
-        name = path.name
-
-        if name.startswith(f"{city_code}_") or name.startswith(f"{city_code}-"):
-            out.append(path)
-
-    return sorted(out, key=lambda p: p.name.lower())
+    prefix_a = f"{city_code}_"
+    prefix_b = f"{city_code}-"
+    out = [
+        path for path in RESULTS_DIR.iterdir()
+        if is_internal_result_file(path) and (path.name.startswith(prefix_a) or path.name.startswith(prefix_b))
+    ]
+    out.sort(key=lambda p: p.name.lower())
+    _CITY_FILES_CACHE[city_code] = (stamp, out)
+    return out
 
 
 def detect_file_role(filename: str) -> Optional[str]:
@@ -394,16 +418,10 @@ def build_rds_url(files: List[Path]) -> Optional[str]:
 
 
 def build_zip_for_job(job_id: str, files: List[Path]) -> Optional[str]:
+    # Do not compress while normalizing/polling job state. The actual ZIP is
+    # created lazily by GET /jobs/{job_id}/zip.
     if not files:
         return None
-
-    zip_path = ZIP_DIR / f"{job_id}.zip"
-
-    if not zip_path.exists():
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for path in files:
-                zf.write(path, arcname=path.name)
-
     return f"/jobs/{job_id}/zip"
 
 
@@ -416,9 +434,12 @@ def file_info(path: Path) -> Dict[str, Any]:
 
 
 def infer_legacy_jobs() -> List[Dict[str, Any]]:
-    """
-    Reconstructs old jobs from files in results/ with a five-digit INE code prefix.
-    """
+    """Reconstruct old jobs, caching the directory scan until results/ changes."""
+    global _LEGACY_JOBS_CACHE
+    stamp = _results_dir_stamp()
+    if _LEGACY_JOBS_CACHE[0] == stamp:
+        return _LEGACY_JOBS_CACHE[1]
+
     by_city: Dict[str, List[Path]] = {}
 
     for path in RESULTS_DIR.iterdir():
@@ -468,6 +489,7 @@ def infer_legacy_jobs() -> List[Dict[str, Any]]:
         )
 
     legacy_jobs.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    _LEGACY_JOBS_CACHE = (stamp, legacy_jobs)
     return legacy_jobs
 
 
@@ -621,7 +643,6 @@ async def run_job_in_background(
     payload: FrontJobRequest,
     city_code: str,
     city_name: str,
-    before_names: set[str],
 ) -> None:
     biasvar = f"x{payload.bias_var}"
 
@@ -669,10 +690,19 @@ async def run_job_in_background(
             message="R pipeline completed. Collecting generated files.",
         )
 
-        after_files = collect_city_files(city_code)
-        after_names = {p.name for p in after_files}
-        new_names = sorted(after_names - before_names)
-        associated_names = new_names if new_names else sorted(after_names)
+        returned_files = result.get("files") or []
+        associated_names: List[str] = []
+        for item in returned_files:
+            if isinstance(item, dict):
+                name = item.get("name")
+                path = item.get("path")
+                if name:
+                    associated_names.append(Path(str(name)).name)
+                elif path:
+                    associated_names.append(Path(str(path)).name)
+        associated_names = sorted(set(associated_names))
+        if not associated_names:
+            associated_names = [p.name for p in collect_city_files(city_code)]
 
         returned_job_id = result.get("job_id")
 
@@ -853,8 +883,6 @@ async def create_job(
     city_name = municipality["name"]
     biasvar = f"x{payload.bias_var}"
 
-    before_names = {p.name for p in collect_city_files(city_code)}
-
     job_id = (
         f"{city_code}-"
         f"{payload.locations}-"
@@ -895,7 +923,6 @@ async def create_job(
         payload,
         city_code,
         city_name,
-        before_names,
     )
 
     return {

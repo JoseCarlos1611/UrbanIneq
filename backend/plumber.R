@@ -11,12 +11,14 @@ APP_DIR <- getwd()
 RESULTS_ROOT <- file.path(APP_DIR, "results")
 DATA_DIRS <- c("IECA", "INE", "results")
 OSRM_URL <- Sys.getenv("OSRM_URL", unset = "http://andalucia-osrm:5001/")
-CONTEXT_CACHE_VERSION <- 2L
+CONTEXT_CACHE_VERSION <- 3L
+
+source(file.path(APP_DIR, "cache_utils.R"), local = TRUE)
+source(file.path(APP_DIR, "numdata.R"), local = TRUE)
+source(file.path(APP_DIR, "spdata.R"), local = TRUE)
 
 ensure_dirs <- function() {
-  for (d in DATA_DIRS) {
-    dir.create(file.path(APP_DIR, d), recursive = TRUE, showWarnings = FALSE)
-  }
+  for (d in DATA_DIRS) dir.create(file.path(APP_DIR, d), recursive = TRUE, showWarnings = FALSE)
 }
 
 ensure_data <- function() {
@@ -41,72 +43,41 @@ ensure_data <- function() {
     file.path(APP_DIR, "INE", "30824.xlsx"),
     file.path(APP_DIR, "INE", "Censo_2021_Andalucia.xlsx")
   )
-
   if (!all(file.exists(required_ine))) {
     missing <- required_ine[!file.exists(required_ine)]
-    stop(
-      paste0(
-        "Missing INE input files: ", paste(missing, collapse = ", "),
-        ". Add them to backend/INE before running the pipeline, ",
-        "or adapt numdata.R/plumber.R to read your CSV files."
-      )
-    )
+    stop(paste0(
+      "Missing INE input files: ", paste(missing, collapse = ", "),
+      ". Add them to backend/INE before running the pipeline."
+    ))
   }
 }
 
 normalize_text <- function(x) {
   out <- iconv(x, from = "UTF-8", to = "ASCII//TRANSLIT")
-  out <- tolower(trimws(out))
-  out
+  tolower(trimws(out))
 }
 
-resolve_city_code <- function(city_code = NULL, city_name = NULL, income_file) {
+resolve_city_code <- function(city_code = NULL, city_name = NULL, income_file = NULL) {
   if (!is.null(city_code) && nzchar(city_code)) {
-    if (nchar(city_code) != 5) {
-      stop("city_code must have length 5")
-    }
-
+    if (nchar(city_code) != 5) stop("city_code must have length 5")
     return(city_code)
   }
+  if (is.null(city_name) || !nzchar(city_name)) stop("You must provide either city_code or city_name")
 
-  if (is.null(city_name) || !nzchar(city_name)) {
-    stop("You must provide either city_code or city_name")
-  }
-
-  alldata <- read_excel(
-    path = income_file,
-    range = "A8:A55442",
-    .name_repair = "unique_quiet"
-  )[[1]]
-
+  bundle <- load_ine_bundle()
+  alldata <- bundle$city_names
   alldata <- alldata[grep("^[0-9]{5} ", alldata)]
-  alldata.pretty <- substr(alldata, 7, nchar(alldata))
-  pretty.norm <- normalize_text(alldata.pretty)
+  pretty <- substr(alldata, 7, nchar(alldata))
+  pretty.norm <- normalize_text(pretty)
   query <- normalize_text(city_name)
-
   exact_idx <- which(pretty.norm == query)
-
-  if (length(exact_idx) == 1) {
-    return(substr(alldata[exact_idx], 1, 5))
-  }
+  if (length(exact_idx) == 1) return(substr(alldata[exact_idx], 1, 5))
 
   partial_idx <- grep(query, pretty.norm, ignore.case = TRUE)
-
-  if (length(partial_idx) == 1) {
-    return(substr(alldata[partial_idx], 1, 5))
-  }
-
+  if (length(partial_idx) == 1) return(substr(alldata[partial_idx], 1, 5))
   if (length(partial_idx) > 1) {
-    candidates <- unique(alldata.pretty[partial_idx])
-
-    stop(
-      paste0(
-        "The municipality name is ambiguous. Matches: ",
-        paste(head(candidates, 10), collapse = ", ")
-      )
-    )
+    stop(paste0("The municipality name is ambiguous. Matches: ", paste(head(unique(pretty[partial_idx]), 10), collapse = ", ")))
   }
-
   stop(paste0("No municipality was found for: ", city_name))
 }
 
@@ -115,72 +86,44 @@ url_check <- function(endpoint) {
   !inherits(check, "try-error")
 }
 
+# Same statistic as before, with less apply()/temporary-matrix overhead.
 databias_local <- function(x, y) {
-  all_median <- as.numeric(apply(x, 2, median))
-
-  all_data <- data.frame(
-    t(
-      sapply(seq_along(all_median), function(j) {
-        jmedian <- all_median[j]
-        w.lt <- as.numeric(which(x[, j] < jmedian))
-        w.gt <- as.numeric(which(x[, j] >= jmedian))
-        ymean.lt <- mean(y[w.lt])
-        ymean.gt <- mean(y[w.gt])
-        c(ymean.lt, ymean.gt)
-      })
-    )
-  )
-
-  nums <- abs(all_data[, 1] - all_data[, 2])
-
-  variations <- (
-    apply(all_data, 1, max) -
-      apply(all_data, 1, min)
-  ) / apply(all_data, 1, min) * 100
-
-  variations <- round(variations, 2)
-
-  all_data <- cbind(all_data, nums, variations, all_median)
-  colnames(all_data) <- c("lower", "greater", "u", "variation", "median")
-  rownames(all_data) <- colnames(x)
-
-  all_data
+  x <- as.data.frame(x)
+  y <- as.numeric(y)
+  medians <- vapply(x, median, numeric(1))
+  lower <- greater <- numeric(ncol(x))
+  for (j in seq_len(ncol(x))) {
+    below <- which(x[[j]] < medians[j])
+    above <- which(x[[j]] >= medians[j])
+    lower[j] <- mean(y[below])
+    greater[j] <- mean(y[above])
+  }
+  nums <- abs(lower - greater)
+  minv <- pmin(lower, greater)
+  maxv <- pmax(lower, greater)
+  variations <- round((maxv - minv) / minv * 100, 2)
+  out <- data.frame(lower = lower, greater = greater, u = nums, variation = variations, median = medians)
+  rownames(out) <- colnames(x)
+  out
 }
 
 bias_labels <- c(
-  "Population",
-  "Income",
-  "Prop. of children",
-  "Prop. of elderly population",
-  "Unemployment rate",
-  "Prop. of foreign population",
-  "Loneliness index"
+  "Population", "Income", "Prop. of children", "Prop. of elderly population",
+  "Unemployment rate", "Prop. of foreign population", "Loneliness index"
 )
 
 select_suggested_bias <- function(bias) {
   eligible <- rep(FALSE, nrow(bias))
-
   for (i in seq_len(nrow(bias))) {
-    key <- rownames(bias)[i]
-    var_num <- as.integer(sub("x", "", key))
+    var_num <- as.integer(sub("x", "", rownames(bias)[i]))
     above_median <- as.numeric(bias[i, "greater"])
     below_median <- as.numeric(bias[i, "lower"])
-
-    if (var_num == 2) {
-      eligible[i] <- above_median < below_median
-    } else {
-      eligible[i] <- above_median > below_median
-    }
+    eligible[i] <- if (var_num == 2) above_median < below_median else above_median > below_median
   }
-
-  if (!any(eligible)) {
-    return(0L)
-  }
-
+  if (!any(eligible)) return(0L)
   eligible_idx <- which(eligible)
   as.integer(eligible_idx[which.max(bias[eligible_idx, "variation"])])
 }
-
 
 no_facilities_error <- function(city_code, locations) {
   labels <- c(
@@ -188,72 +131,16 @@ no_facilities_error <- function(city_code, locations) {
     clinics_public = "public healthcare facilities",
     clinics_any = "public or private healthcare facilities"
   )
-
   label <- labels[[locations]]
   if (is.null(label)) label <- locations
-
   structure(
     list(
-      message = paste0(
-        "No destinations are available for this municipality and accessibility option: ",
-        label,
-        ". Choose another accessibility option or municipality."
-      ),
-      city_code = city_code,
-      locations = locations,
-      call = NULL
+      message = paste0("No destinations are available for this municipality and accessibility option: ", label,
+                       ". Choose another accessibility option or municipality."),
+      city_code = city_code, locations = locations, call = NULL
     ),
     class = c("no_facilities", "error", "condition")
   )
-}
-
-count_available_locations <- function(city_code, locations) {
-  locations <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
-
-  if (locations == "parks") {
-    citydata <- st_read(file.path(APP_DIR, "IECA", "13_01_TerminoMunicipal.shp"), quiet = TRUE)
-    citydata <- subset(citydata, subset = cod_mun == city_code)
-
-    gzdata <- st_read(file.path(APP_DIR, "IECA", "07_06_ZonaVerde.shp"), quiet = TRUE)
-    gzdata <- subset(gzdata, subset = tipo == "Parque")
-
-    if (nrow(citydata) == 0 || nrow(gzdata) == 0) {
-      return(0L)
-    }
-
-    return(length(st_contains(citydata, gzdata)[[1]]))
-  }
-
-  clinic_data <- subset(
-    st_read(file.path(APP_DIR, "IECA", "12_01_CentroSalud.shp"), quiet = TRUE),
-    subset = cod_mun == city_code,
-    select = cod_mun
-  )
-  clinic_data$sistema_sa <- "Público"
-
-  hospital_data <- subset(
-    st_read(file.path(APP_DIR, "IECA", "12_02_Hospital_CAE.shp"), quiet = TRUE),
-    subset = cod_mun == city_code,
-    select = c(cod_mun, sistema_sa)
-  )
-
-  clinic_any <- rbind(clinic_data, hospital_data)
-
-  if (locations == "clinics_public") {
-    clinic_any <- subset(clinic_any, subset = sistema_sa == "Público")
-  }
-
-  nrow(clinic_any)
-}
-
-assert_locations_available <- function(city_code, locations) {
-  n <- count_available_locations(city_code, locations)
-
-  if (is.null(n) || is.na(n) || n < 1) {
-    stop(no_facilities_error(city_code, locations))
-  }
-
-  invisible(n)
 }
 
 is_no_facilities_error <- function(e) {
@@ -261,178 +148,178 @@ is_no_facilities_error <- function(e) {
 }
 
 no_facilities_response <- function(city_code, locations, dist_type, e) {
+  list(available = FALSE, cache_id = NULL, locations = locations, dist_type = dist_type, rows = list(), message = conditionMessage(e))
+}
+
+analysis_headers <- function() {
   list(
-    available = FALSE,
-    cache_id = NULL,
-    locations = locations,
-    dist_type = dist_type,
-    rows = list(),
-    message = conditionMessage(e)
+    orig = c(
+      "Sección", "Personas", "Porcentaje de personas de más de 64 años",
+      "Porcentaje de población extranjera", "Porcentaje de población parada sobre población activa"
+    ),
+    repl = c("ct_code", "total", "elderly", "foreigner", "unemployed")
   )
 }
 
-build_analysis_context <- function(
-  city_code = NULL,
-  city_name = NULL,
-  locations = "parks",
-  dist_type = "mean"
-) {
+analysis_vars <- function() {
+  list(
+    orig = c("total", "mean_income", "underage", "elderly", "unemployed", "foreigner", "lonely"),
+    repl = c("x1", "x2", "x3", "x4", "x5", "x6", "x7")
+  )
+}
+
+build_base_data <- function(city_code) {
+  cached <- read_base_cache(city_code)
+  if (!is.null(cached)) return(cached)
+
+  headers <- analysis_headers()
+  vars <- analysis_vars()
+  ine <- load_ine_bundle()
+
+  municipality <- sp.get_city(get_spatial_layer("municipalities"), city_code)
+  tractdata <- sp.get_tracts(get_spatial_layer("tracts"), city_code, tract_exclude = NULL)
+  if (nrow(municipality) < 1 || nrow(tractdata) < 1) stop(paste0("No spatial census data found for municipality ", city_code))
+
+  income_data <- ct.get_income(city_code, file.path(APP_DIR, "INE", "30824.xlsx"), ine_bundle = ine)
+  census_data <- ct.get_census_info(city_code, headers, file.path(APP_DIR, "INE", "Censo_2021_Andalucia.xlsx"), ine_bundle = ine)
+
+  iepabra <- get_spatial_layer("iepabra")
+  ieca_data <- st_drop_geometry(subset(iepabra, subset = (CUMUN == city_code), select = c(CUSEC, I6, I16)))
+  colnames(ieca_data) <- c("ct_code", "lonely", "underage")
+
+  all_data <- merge(income_data, census_data, by = "ct_code")
+  all_data <- merge(all_data, ieca_data, by = "ct_code")
+  ct_codes <- all_data$ct_code
+  all_data <- all_data[, vars$orig, drop = FALSE]
+  colnames(all_data) <- vars$repl
+  rownames(all_data) <- ct_codes
+
+  # Join X to tract geometry once. This is independent of destination and distance statistic.
+  raw_base <- st_as_sf(merge(all_data, tractdata, by = "row.names"))
+  raw_names <- raw_base$Row.names
+  raw_base <- subset(raw_base, select = vars$repl)
+  rownames(raw_base) <- raw_names
+
+  x <- cbind(1, st_drop_geometry(raw_base[, vars$repl, drop = FALSE]))
+  xnorm <- cbind(1, scale(st_drop_geometry(raw_base[, vars$repl, drop = FALSE])))
+  colnames(x)[1] <- colnames(xnorm)[1] <- "Intercept"
+
+  centroids_all <- sp.centroid_fix(st_centroid(tractdata), NULL)
+  rownames(centroids_all) <- rownames(tractdata)
+  centroid_idx <- match(rownames(raw_base), rownames(centroids_all))
+  centroids <- st_coordinates(centroids_all[centroid_idx, ])
+  rownames(centroids) <- rownames(raw_base)
+
+  data <- list(
+    city_code = city_code,
+    municipality = municipality,
+    tractdata = tractdata,
+    raw_base = raw_base,
+    x = x,
+    xnorm = xnorm,
+    centroids = centroids,
+    name = municipality$nombre,
+    varname = iconv(gsub(" ", "", tolower(municipality$nombre)), to = "ASCII//TRANSLIT")
+  )
+  write_base_cache(city_code, data)
+  data
+}
+
+get_destinations <- function(base, locations) {
+  locations <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
+  if (locations == "parks") {
+    parks <- subset(get_spatial_layer("parks"), subset = (tipo == "Parque"))
+    return(parks[st_contains(base$municipality, parks)[[1]], ])
+  }
+
+  clinics <- subset(get_spatial_layer("clinics"), subset = cod_mun == base$city_code, select = cod_mun)
+  clinics$sistema_sa <- "Público"
+  hospitals <- subset(get_spatial_layer("hospitals"), subset = cod_mun == base$city_code, select = c(cod_mun, sistema_sa))
+  destinations <- rbind(clinics, hospitals)
+  if (locations == "clinics_public") destinations <- subset(destinations, subset = sistema_sa == "Público")
+  destinations
+}
+
+get_or_build_routing <- function(base, locations) {
+  cached <- read_routing_cache(base$city_code, locations)
+  if (!is.null(cached)) return(cached)
+
+  destinations <- get_destinations(base, locations)
+  if (is.null(destinations) || nrow(destinations) < 1) stop(no_facilities_error(base$city_code, locations))
+  if (!url_check(OSRM_URL)) stop(paste0("No OSRM instance is available at ", OSRM_URL))
+
+  routing <- sp.osrm_matrix(base$tractdata, destinations, tract_fix = NULL, osrm_url = OSRM_URL)
+  if (nrow(routing$distances) == nrow(base$tractdata)) {
+    rownames(routing$distances) <- rownames(base$tractdata)
+  }
+  rownames(routing$centroids) <- rownames(base$tractdata)
+  routing$destinations <- destinations
+  routing$locations <- locations
+  write_routing_cache(base$city_code, locations, routing)
+  routing
+}
+
+count_available_locations <- function(city_code, locations) {
+  base <- build_base_data(city_code)
+  destinations <- get_destinations(base, locations)
+  if (is.null(destinations)) 0L else nrow(destinations)
+}
+
+assert_locations_available <- function(city_code, locations) {
+  n <- count_available_locations(city_code, locations)
+  if (is.null(n) || is.na(n) || n < 1) stop(no_facilities_error(city_code, locations))
+  invisible(n)
+}
+
+build_analysis_context <- function(city_code = NULL, city_name = NULL, locations = "parks", dist_type = "mean") {
   oldwd <- getwd()
   on.exit(setwd(oldwd), add = TRUE)
   setwd(APP_DIR)
-
   ensure_data()
 
+  resolved_city <- resolve_city_code(city_code, city_name, file.path(APP_DIR, "INE", "30824.xlsx"))
+  locations <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
+  dist_type <- match.arg(dist_type, c("mean", "min", "max"))
+
+  base <- build_base_data(resolved_city)
+  routing <- get_or_build_routing(base, locations)
+  y_all <- sp.reduce_dists(routing$distances, dist_type)
+
+  idx <- match(rownames(base$raw_base), rownames(y_all))
+  if (any(is.na(idx))) stop("Routing result could not be aligned with census sections")
+  y <- matrix(y_all$y[idx], ncol = 1)
+  rownames(y) <- rownames(base$raw_base)
+
+  raw <- base$raw_base
+  raw$y <- as.numeric(y[, 1])
+
+  citydata <- list(
+    x = base$x,
+    y = y,
+    centroids = base$centroids,
+    centroids_orig = NULL,
+    xnorm = base$xnorm,
+    raw = raw,
+    geometry = st_geometry(raw),
+    # citydata$d intentionally removed: O(n^2) and unused by the current web pipeline.
+    gz = if (locations == "parks") routing$destinations else NULL,
+    clinics_any = if (locations == "clinics_any") routing$destinations else NULL,
+    clinics_public = if (locations == "clinics_public") routing$destinations else NULL,
+    municipality = base$municipality,
+    name = base$name,
+    varname = base$varname
+  )
+
   env <- new.env(parent = globalenv())
-  env$CENSUS_FILE <- "INE/Censo_2021_Andalucia.xlsx"
-  env$INCOME_FILE <- "INE/30824.xlsx"
-  env$IECA_SHP_FILE <- "IECA/iepabra2021.shp"
+  env$CITY_CODE <- resolved_city
+  env$LOCATIONS <- locations
+  env$DIST_TYPE <- dist_type
+  env$DIST_NAME <- c(mean = "Average", min = "Min", max = "Max")[[dist_type]]
   env$OSRM_URL <- OSRM_URL
-  env$TRACT_FIX <- NULL
-  env$TRACT_EXCLUDE <- NULL
 
-  env$CITY_CODE <- resolve_city_code(city_code, city_name, env$INCOME_FILE)
-  env$LOCATIONS <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
-  env$DIST_TYPE <- match.arg(dist_type, c("mean", "min", "max"))
-  env$DIST_NAME <- c(mean = "Average", min = "Min", max = "Max")[[env$DIST_TYPE]]
-  env$sourced <- FALSE
-
-  assert_locations_available(env$CITY_CODE, env$LOCATIONS)
-
-  if (!url_check(env$OSRM_URL)) {
-    stop(paste0("No OSRM instance is available at ", env$OSRM_URL))
-  }
-
-  source(file.path(APP_DIR, "numdata.R"), local = env)
-  source(file.path(APP_DIR, "spdata.R"), local = env)
-
-  env$HEADERS <- list(
-    orig = c(
-      "Sección",
-      "Personas",
-      "Porcentaje de personas de más de 64 años",
-      "Porcentaje de población extranjera",
-      "Porcentaje de población parada sobre población activa"
-    ),
-    repl = c(
-      "ct_code",
-      "total",
-      "elderly",
-      "foreigner",
-      "unemployed"
-    )
-  )
-
-  env$VARS <- list(
-    orig = c(
-      "total",
-      "mean_income",
-      "underage",
-      "elderly",
-      "unemployed",
-      "foreigner",
-      "lonely"
-    ),
-    repl = c(
-      "x1",
-      "x2",
-      "x3",
-      "x4",
-      "x5",
-      "x6",
-      "x7"
-    )
-  )
-
-  env$ieca.get_data <- function(ct_code, shpfile) {
-    ieca_data <- st_read(shpfile, quiet = TRUE)
-
-    ieca_data <- st_drop_geometry(
-      subset(
-        ieca_data,
-        subset = (CUMUN == env$CITY_CODE),
-        select = c(CUSEC, I6, I16)
-      )
-    )
-
-    colnames(ieca_data) <- c("ct_code", "lonely", "underage")
-
-    ieca_data
-  }
-
-  env$ct.get_x <- function() {
-    income_data <- env$ct.get_income(env$CITY_CODE, env$INCOME_FILE)
-    census_data <- env$ct.get_census_info(env$CITY_CODE, env$HEADERS, env$CENSUS_FILE)
-    ieca_data <- env$ieca.get_data(env$CITY_CODE, env$IECA_SHP_FILE)
-
-    all_data1 <- merge(
-      x = income_data,
-      y = census_data,
-      by = "ct_code"
-    )
-
-    all_data2 <- merge(
-      x = all_data1,
-      y = ieca_data,
-      by = "ct_code"
-    )
-
-    ct_codes <- all_data2$ct_code
-    all_data2 <- all_data2[, env$VARS[["orig"]]]
-    colnames(all_data2) <- env$VARS[["repl"]]
-    rownames(all_data2) <- ct_codes
-
-    all_data2
-  }
-
-  x <- env$ct.get_x()
-  y <- env$sp.dists$y
-  centroids <- env$sp.dists$centroids
-
-  xy <- merge(x, y, by = "row.names")
-  rownames(xy) <- xy$Row.names
-  xy <- subset(xy, select = -Row.names)
-
-  raw <- st_as_sf(merge(xy, env$sp.tractdata, by = "row.names"))
-  raw.rownames <- raw$Row.names
-  raw <- subset(raw, select = c(env$VARS[["repl"]], "y"))
-  rownames(raw) <- raw.rownames
-
-  x <- cbind(1, st_drop_geometry(raw[, 1:7]))
-  xnorm <- cbind(1, scale(st_drop_geometry(raw[, 1:7])))
-  colnames(x)[1] <- colnames(xnorm)[1] <- "Intercept"
-
-  y <- matrix(st_drop_geometry(raw[, 8])$y)
-  rownames(y) <- raw.rownames
-
-  centroids <- st_as_sf(merge(xy, centroids, by = "row.names"))
-  centroids <- st_coordinates(centroids)
-  rownames(centroids) <- raw.rownames
-
-  citydata <- list()
-  citydata[["x"]] <- x
-  citydata[["y"]] <- y
-  citydata[["centroids"]] <- centroids
-  citydata[["centroids_orig"]] <- NULL
-  citydata[["xnorm"]] <- xnorm
-  citydata[["raw"]] <- raw
-  citydata[["geometry"]] <- st_geometry(raw)
-  citydata[["d"]] <- as.matrix(dist(centroids))
-  citydata[["gz"]] <- env$sp.gzdata
-  citydata[["clinics_any"]] <- env$sp.clinic_any
-  citydata[["clinics_public"]] <- env$sp.clinic_public
-  citydata[["municipality"]] <- env$sp.citydata
-  citydata[["name"]] <- env$sp.citydata$nombre
-  citydata[["varname"]] <- iconv(
-    gsub(" ", "", tolower(env$sp.citydata$nombre)),
-    to = "ASCII//TRANSLIT"
-  )
-
-  list(
-    env = env,
-    citydata = citydata
-  )
+  list(env = env, citydata = citydata)
 }
+
 
 safe_results_path <- function(relative_path) {
   if (is.null(relative_path) || !nzchar(relative_path)) {
@@ -669,16 +556,15 @@ sanitize_cache_part <- function(x) {
 }
 
 context_cache_id <- function(city_code, locations, dist_type) {
-  paste(
-    sanitize_cache_part(city_code),
-    sanitize_cache_part(locations),
-    sanitize_cache_part(dist_type),
-    sep = "__"
-  )
+  paste(sanitize_cache_part(city_code), sanitize_cache_part(locations), sanitize_cache_part(dist_type), sep = "__")
 }
 
 context_cache_path <- function(cache_id) {
   file.path(context_cache_dir(), paste0(sanitize_cache_part(cache_id), ".rds"))
+}
+
+context_dependency_signature <- function(locations) {
+  paste(base_source_signature(), routing_source_signature(locations), sep = "##")
 }
 
 minimal_env <- function(city_code, locations, dist_type) {
@@ -687,43 +573,35 @@ minimal_env <- function(city_code, locations, dist_type) {
   env$LOCATIONS <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
   env$DIST_TYPE <- match.arg(dist_type, c("mean", "min", "max"))
   env$DIST_NAME <- c(mean = "Average", min = "Min", max = "Max")[[env$DIST_TYPE]]
+  env$OSRM_URL <- OSRM_URL
   env
 }
 
-read_cached_context <- function(cache_id) {
-  if (is.null(cache_id) || !nzchar(as.character(cache_id))) {
-    return(NULL)
-  }
-
+read_cached_context <- function(cache_id, expected_city = NULL, expected_locations = NULL, expected_dist_type = NULL) {
+  if (is.null(cache_id) || !nzchar(as.character(cache_id))) return(NULL)
   path <- context_cache_path(cache_id)
+  if (!file.exists(path)) return(NULL)
+  cached <- tryCatch(readRDS(path), error = function(e) NULL)
+  if (is.null(cached) || is.null(cached$citydata) || is.null(cached$config)) return(NULL)
+  if (is.null(cached$cache_version) || !identical(as.integer(cached$cache_version), CONTEXT_CACHE_VERSION)) return(NULL)
 
-  if (!file.exists(path)) {
-    return(NULL)
-  }
+  cfg <- cached$config
+  if (!is.null(expected_city) && !identical(as.character(cfg$city_code), as.character(expected_city))) return(NULL)
+  if (!is.null(expected_locations) && !identical(as.character(cfg$locations), as.character(expected_locations))) return(NULL)
+  if (!is.null(expected_dist_type) && !identical(as.character(cfg$dist_type), as.character(expected_dist_type))) return(NULL)
 
-  cached <- readRDS(path)
-
-  if (is.null(cached$citydata) || is.null(cached$config)) {
-    return(NULL)
-  }
-
-  if (is.null(cached$cache_version) || !identical(as.integer(cached$cache_version), CONTEXT_CACHE_VERSION)) {
-    return(NULL)
-  }
+  expected_sig <- context_dependency_signature(cfg$locations)
+  if (is.null(cached$source_signature) || !identical(cached$source_signature, expected_sig)) return(NULL)
 
   list(
-    env = minimal_env(
-      cached$config$city_code,
-      cached$config$locations,
-      cached$config$dist_type
-    ),
+    env = minimal_env(cfg$city_code, cfg$locations, cfg$dist_type),
     citydata = cached$citydata,
     cache_id = cache_id
   )
 }
 
 write_cached_context <- function(cache_id, ctx) {
-  saveRDS(
+  atomic_save_rds(
     list(
       config = list(
         city_code = ctx$env$CITY_CODE,
@@ -732,43 +610,39 @@ write_cached_context <- function(cache_id, ctx) {
       ),
       citydata = ctx$citydata,
       created_at = as.character(Sys.time()),
+      source_signature = context_dependency_signature(ctx$env$LOCATIONS),
       cache_version = CONTEXT_CACHE_VERSION
     ),
-    file = context_cache_path(cache_id)
+    context_cache_path(cache_id)
   )
 }
 
-get_or_build_context <- function(
-  city_code = NULL,
-  city_name = NULL,
-  locations = "parks",
-  dist_type = "mean",
-  cache_id = NULL
-) {
-  cached <- read_cached_context(cache_id)
+get_or_build_context <- function(city_code = NULL, city_name = NULL, locations = "parks", dist_type = "mean", cache_id = NULL) {
+  ensure_data()
+  resolved_city <- resolve_city_code(city_code, city_name, file.path(APP_DIR, "INE", "30824.xlsx"))
+  locations <- match.arg(locations, c("parks", "clinics_public", "clinics_any"))
+  dist_type <- match.arg(dist_type, c("mean", "min", "max"))
 
-  if (!is.null(cached)) {
-    cached$cache_id <- cache_id
-    return(cached)
+  automatic_id <- context_cache_id(resolved_city, locations, dist_type)
+  requested_id <- if (!is.null(cache_id) && nzchar(as.character(cache_id))) as.character(cache_id) else automatic_id
+
+  cached <- read_cached_context(requested_id, resolved_city, locations, dist_type)
+  if (is.null(cached) && !identical(requested_id, automatic_id)) {
+    cached <- read_cached_context(automatic_id, resolved_city, locations, dist_type)
+    if (!is.null(cached)) cached$cache_id <- automatic_id
   }
+  if (!is.null(cached)) return(cached)
 
   ctx <- build_analysis_context(
-    city_code = city_code,
-    city_name = city_name,
+    city_code = resolved_city,
     locations = locations,
     dist_type = dist_type
   )
-
-  resolved_cache_id <- if (!is.null(cache_id) && nzchar(as.character(cache_id))) {
-    cache_id
-  } else {
-    context_cache_id(ctx$env$CITY_CODE, ctx$env$LOCATIONS, ctx$env$DIST_TYPE)
-  }
-
-  write_cached_context(resolved_cache_id, ctx)
-  ctx$cache_id <- resolved_cache_id
+  write_cached_context(automatic_id, ctx)
+  ctx$cache_id <- automatic_id
   ctx
 }
+
 
 build_bias_table <- function(city_code = NULL, city_name = NULL, locations = "parks", dist_type = "mean", cache_id = NULL) {
   ctx <- get_or_build_context(
@@ -1123,26 +997,41 @@ run_pipeline <- function(
     selected_bias = selected_bias
   )
 
-  fplot.gz <- ggplot() +
-    geom_sf(data = citydata$geometry, fill = NA) +
-    geom_sf(data = citydata$gz, fill = "green2") +
-    theme_void()
+  # Facility/park maps are static for a municipality. Generate only the
+  # selected accessibility target, and only if the file does not already exist.
+  static_target_paths <- character()
 
-  suppressMessages(ggsave(filenames$gz, plot = fplot.gz))
-
-  fplot.clinic_any <- ggplot() +
-    geom_sf(data = citydata$geometry, fill = NA) +
-    geom_sf(data = citydata$clinics_any, color = "orange") +
-    theme_void()
-
-  suppressMessages(ggsave(filenames$clinic_any, plot = fplot.clinic_any))
-
-  fplot.clinic_public <- ggplot() +
-    geom_sf(data = citydata$geometry, fill = NA) +
-    geom_sf(data = citydata$clinics_public, color = "red") +
-    theme_void()
-
-  suppressMessages(ggsave(filenames$clinic_public, plot = fplot.clinic_public))
+  if (env$LOCATIONS == "parks" && !is.null(citydata$gz)) {
+    if (!static_map_is_current(filenames$gz, env$LOCATIONS)) {
+      fplot.gz <- ggplot() +
+        geom_sf(data = citydata$geometry, fill = NA) +
+        geom_sf(data = citydata$gz, fill = "green2") +
+        theme_void()
+      suppressMessages(ggsave(filenames$gz, plot = fplot.gz))
+      mark_static_map_current(filenames$gz, env$LOCATIONS)
+    }
+    static_target_paths <- c(static_target_paths, filenames$gz)
+  } else if (env$LOCATIONS == "clinics_any" && !is.null(citydata$clinics_any)) {
+    if (!static_map_is_current(filenames$clinic_any, env$LOCATIONS)) {
+      fplot.clinic_any <- ggplot() +
+        geom_sf(data = citydata$geometry, fill = NA) +
+        geom_sf(data = citydata$clinics_any, color = "orange") +
+        theme_void()
+      suppressMessages(ggsave(filenames$clinic_any, plot = fplot.clinic_any))
+      mark_static_map_current(filenames$clinic_any, env$LOCATIONS)
+    }
+    static_target_paths <- c(static_target_paths, filenames$clinic_any)
+  } else if (env$LOCATIONS == "clinics_public" && !is.null(citydata$clinics_public)) {
+    if (!static_map_is_current(filenames$clinic_public, env$LOCATIONS)) {
+      fplot.clinic_public <- ggplot() +
+        geom_sf(data = citydata$geometry, fill = NA) +
+        geom_sf(data = citydata$clinics_public, color = "red") +
+        theme_void()
+      suppressMessages(ggsave(filenames$clinic_public, plot = fplot.clinic_public))
+      mark_static_map_current(filenames$clinic_public, env$LOCATIONS)
+    }
+    static_target_paths <- c(static_target_paths, filenames$clinic_public)
+  }
 
   fplot.y <- ggplot() +
     geom_sf(data = citydata$geometry, aes(fill = citydata$y)) +
@@ -1171,9 +1060,7 @@ run_pipeline <- function(
   generated_paths <- unique(c(
     filenames$rds,
     unname(unlist(open_data_files)),
-    filenames$gz,
-    filenames$clinic_any,
-    filenames$clinic_public,
+    static_target_paths,
     filenames$y,
     filenames$svar
   ))

@@ -1,5 +1,153 @@
 [
   {
+    "job_id": "41061-parks-max-x3-20261006215241",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-10-06T21:52:41.447378+00:00",
+    "config": {
+      "city_code": "41061",
+      "city_name": "Marinaleda",
+      "locations": "parks",
+      "dist_type": "max",
+      "bias_var": 3,
+      "cache_id": "41061__parks__max"
+    },
+    "logs": [
+      {
+        "ts": "2026-10-06T21:52:41.447427+00:00",
+        "level": "info",
+        "msg": "Job queued."
+      },
+      {
+        "ts": "2026-10-06T21:52:41.509938+00:00",
+        "level": "info",
+        "msg": "Preparing municipality and spatial data."
+      },
+      {
+        "ts": "2026-10-06T21:52:41.534328+00:00",
+        "level": "info",
+        "msg": "Loading socio-economic and census data."
+      },
+      {
+        "ts": "2026-10-06T21:52:41.568034+00:00",
+        "level": "info",
+        "msg": "Starting R geospatial processing pipeline."
+      },
+      {
+        "ts": "2026-10-06T21:52:44.819841+00:00",
+        "level": "info",
+        "msg": "R pipeline completed. Collecting generated files."
+      },
+      {
+        "ts": "2026-10-06T21:52:44.838192+00:00",
+        "level": "info",
+        "msg": "R service returned job id 41061-parks-20261006215242; keeping frontend job id 41061-parks-max-x3-20261006215241."
+      },
+      {
+        "ts": "2026-10-06T21:52:44.863779+00:00",
+        "level": "info",
+        "msg": "Maps and dataset files are ready."
+      },
+      {
+        "ts": "2026-10-06T21:52:44.893857+00:00",
+        "level": "info",
+        "msg": "Job completed successfully."
+      }
+    ],
+    "filenames": [
+      "41061-ugs-bias_table.csv",
+      "41061-ugs-centroids.csv",
+      "41061-ugs-centroids.geojson",
+      "41061-ugs-greenzones.geojson",
+      "41061-ugs-metadata.json",
+      "41061-ugs-municipality.geojson",
+      "41061-ugs-raw.csv",
+      "41061-ugs-raw.geojson",
+      "41061-ugs-x.csv",
+      "41061-ugs-xnorm.csv",
+      "41061-ugs-y.csv",
+      "41061-ugs.rds",
+      "41061-ugs_y.png",
+      "41061_greenzones.png",
+      "41061_x3.png"
+    ]
+  },
+  {
+    "job_id": "41091-clinics_public-min-x6-20261006214027",
+    "status": "succeeded",
+    "stage": "done",
+    "progress": 100,
+    "created_at": "2026-10-06T21:40:27.648453+00:00",
+    "config": {
+      "city_code": "41091",
+      "city_name": "Sevilla",
+      "locations": "clinics_public",
+      "dist_type": "min",
+      "bias_var": 6,
+      "cache_id": "41091__clinics_public__min"
+    },
+    "logs": [
+      {
+        "ts": "2026-10-06T21:40:27.648472+00:00",
+        "level": "info",
+        "msg": "Job queued."
+      },
+      {
+        "ts": "2026-10-06T21:40:27.671065+00:00",
+        "level": "info",
+        "msg": "Preparing municipality and spatial data."
+      },
+      {
+        "ts": "2026-10-06T21:40:27.709967+00:00",
+        "level": "info",
+        "msg": "Loading socio-economic and census data."
+      },
+      {
+        "ts": "2026-10-06T21:40:27.740587+00:00",
+        "level": "info",
+        "msg": "Starting R geospatial processing pipeline."
+      },
+      {
+        "ts": "2026-10-06T21:40:31.747146+00:00",
+        "level": "info",
+        "msg": "R pipeline completed. Collecting generated files."
+      },
+      {
+        "ts": "2026-10-06T21:40:31.764744+00:00",
+        "level": "info",
+        "msg": "R service returned job id 41091-clinics_public-20261006214027; keeping frontend job id 41091-clinics_public-min-x6-20261006214027."
+      },
+      {
+        "ts": "2026-10-06T21:40:31.788581+00:00",
+        "level": "info",
+        "msg": "Maps and dataset files are ready."
+      },
+      {
+        "ts": "2026-10-06T21:40:31.818798+00:00",
+        "level": "info",
+        "msg": "Job completed successfully."
+      }
+    ],
+    "filenames": [
+      "41091-hcf_public-bias_table.csv",
+      "41091-hcf_public-centroids.csv",
+      "41091-hcf_public-centroids.geojson",
+      "41091-hcf_public-clinics_public.geojson",
+      "41091-hcf_public-metadata.json",
+      "41091-hcf_public-municipality.geojson",
+      "41091-hcf_public-raw.csv",
+      "41091-hcf_public-raw.geojson",
+      "41091-hcf_public-x.csv",
+      "41091-hcf_public-xnorm.csv",
+      "41091-hcf_public-y.csv",
+      "41091-hcf_public.rds",
+      "41091-hcf_public_y.png",
+      "41091_clinics_public.png",
+      "41091_x6.png"
+    ]
+  },
+  {
     "job_id": "41059-parks-mean-x7-20260528231233",
     "status": "succeeded",
     "stage": "done",

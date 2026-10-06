@@ -1,0 +1,21 @@
+# Large/downloaded/generated directories must never be sent to Docker's build context.
+IECA/
+INE/
+results/
+andalucia-osrm/
+
+# Local caches / environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+.Rhistory
+.RData
+.Rproj.user/
+
+# Editor / VCS
+.git/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
